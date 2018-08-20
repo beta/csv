@@ -16,6 +16,7 @@ type rule struct {
 	allowSingleQuote       bool
 	omitLeadingSpace       bool
 	allowVariableRowLength bool
+	allowComment           bool
 	comment                rune
 	separator              rune
 	header                 bool
@@ -26,6 +27,7 @@ var defaultRule = rule{
 	allowSingleQuote:       true,
 	omitLeadingSpace:       true,
 	allowVariableRowLength: true,
+	allowComment:           true,
 	comment:                ';',
 	separator:              ',',
 	header:                 false,
@@ -67,6 +69,18 @@ var (
 			r.allowVariableRowLength = v
 		}
 	}
+	// AllowComment sets whether comments are allowed.
+	AllowComment = func(v bool) Setting {
+		return func(r *rule) {
+			r.allowComment = v
+		}
+	}
+	// Comment sets the leading rune of comments.
+	Comment = func(comment rune) Setting {
+		return func(r *rule) {
+			r.comment = comment
+		}
+	}
 	// Separator sets the separator used to separate fields.
 	Separator = func(sep rune) Setting {
 		return func(r *rule) {
@@ -86,8 +100,9 @@ var (
 		return func(r *rule) {
 			r.allowSingleQuote = false
 			r.omitLeadingSpace = false
-			r.separator = ','
+			r.allowComment = false
 			r.comment = '\x00'
+			r.separator = ','
 		}
 	}
 )

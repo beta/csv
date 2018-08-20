@@ -35,7 +35,6 @@ type Scanner struct {
 	lineNo   int
 	pos      int
 	c        rune
-	err      error
 	eof      bool
 	lastLine bool
 
@@ -50,31 +49,34 @@ type Scanner struct {
 //
 // If an error occurs, header and rows will be returned as nil.
 func (s *Scanner) Scan() (header []string, rows [][]string, err error) {
-	s.next()
-	if s.err != nil {
-		return nil, nil, s.err
+	err = s.next()
+	if err != nil {
+		err = fmt.Errorf("line %d, pos %d: %v", s.lineNo, s.pos, err)
+		return
 	}
 
 	for !s.eof {
 		switch {
-		case s.c == s.rule.comment:
-			s.err = s.scanComment()
+		case s.rule.allowComment && s.c == s.rule.comment:
+			err = s.scanComment()
 		case !s.headerScanned && s.rule.header:
-			s.header, s.err = s.scanHeader()
+			s.header, err = s.scanHeader()
 			s.headerScanned = true
 		default:
-			row, err := s.scanRecord()
+			var row []string
+			row, err = s.scanRecord()
 			if err != nil {
-				s.err = err
-			} else {
-				if s.rows == nil {
-					s.rows = make([][]string, 0)
-					s.rows = append(s.rows, row)
-				}
+				err = fmt.Errorf("line %d, pos %d: %v", s.lineNo, s.pos, err)
+				return
 			}
+			if s.rows == nil {
+				s.rows = make([][]string, 0)
+			}
+			s.rows = append(s.rows, row)
 		}
-		if s.err != nil {
-			return nil, nil, err
+		if err != nil {
+			err = fmt.Errorf("line %d, pos %d: %v", s.lineNo, s.pos, err)
+			return
 		}
 	}
 	header = s.header
@@ -84,7 +86,7 @@ func (s *Scanner) Scan() (header []string, rows [][]string, err error) {
 
 // next moves to the next rune in the document.
 func (s *Scanner) next() error {
-	if s.pos >= len([]rune(s.line)) {
+	if s.pos >= len([]rune(s.line))-1 {
 		return s.nextLine()
 	}
 	s.pos++
@@ -133,9 +135,9 @@ func (s *Scanner) scanHeader() ([]string, error) {
 	}
 	header = append(header, name)
 
-	for s.c != '\n' {
-		s.scanCOMMA()
-		if s.err != nil {
+	for !s.eof && !s.isLineEnd(s.c) {
+		_, err = s.scanCOMMA()
+		if err != nil {
 			return nil, err
 		}
 
@@ -145,11 +147,39 @@ func (s *Scanner) scanHeader() ([]string, error) {
 		}
 		header = append(header, name)
 	}
+
+	err = s.nextLine()
+	if err != nil {
+		return nil, err
+	}
 	return header, nil
 }
 
 func (s *Scanner) scanRecord() ([]string, error) {
-	return nil, nil
+	var fields = make([]string, 0)
+	field, err := s.scanField()
+	if err != nil {
+		return nil, err
+	}
+	fields = append(fields, field)
+
+	for !s.eof && !s.isLineEnd(s.c) {
+		_, err := s.scanCOMMA()
+		if err != nil {
+			return nil, err
+		}
+		field, err := s.scanField()
+		if err != nil {
+			return nil, err
+		}
+		fields = append(fields, field)
+	}
+
+	err = s.nextLine()
+	if err != nil {
+		return nil, err
+	}
+	return fields, nil
 }
 
 // scanName scans and returns a header name. A header name has the same rules as
@@ -177,29 +207,46 @@ func (s *Scanner) scanField() (string, error) {
 }
 
 func (s *Scanner) scanEscaped() (string, error) {
-	// TODO: implement scanEscaped.
-	_, err := s.scanQuote()
+	leadingQuote, err := s.scanQuote()
 	if err != nil {
 		return "", err
 	}
 
 	var escaped string
+	var foundFirstQuote = false
 	for !s.eof {
 		if s.isQuote(s.c) {
-			var err = s.next()
-			if err != nil {
-				return "", err
-			}
-			if s.isQuote(s.c) { // 2 quotes (escaped quote).
-				escaped += "\""
+			if string(s.c) != leadingQuote {
+				if foundFirstQuote {
+					return escaped, nil
+				}
+				escaped += string(s.c)
 				err = s.next()
 				if err != nil {
 					return "", err
 				}
-			} else { // End of string.
-				return escaped, nil
+				continue
+			}
+
+			// s.c == leading quote, escape or field end.
+			if !foundFirstQuote {
+				foundFirstQuote = true
+				err = s.next()
+				if err != nil {
+					return "", err
+				}
+			} else {
+				foundFirstQuote = false
+				escaped += string(s.c)
+				err = s.next()
+				if err != nil {
+					return "", err
+				}
 			}
 		} else {
+			if foundFirstQuote {
+				return escaped, nil
+			}
 			escaped += string(s.c)
 			var err = s.next()
 			if err != nil {
@@ -208,12 +255,31 @@ func (s *Scanner) scanEscaped() (string, error) {
 		}
 	}
 
+	if foundFirstQuote {
+		return escaped, nil
+	}
 	return "", fmt.Errorf("trailing quote not found")
 }
 
 func (s *Scanner) scanNonEscaped() (string, error) {
-	// TODO: implement scanNonEscaped.
-	return "", nil
+	if s.rule.omitLeadingSpace {
+		for !s.eof && !s.isLineEnd(s.c) && s.c == ' ' {
+			var err = s.next()
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+
+	var nonEscaped string
+	for !s.eof && !s.isLineEnd(s.c) && !s.isComma(s.c) {
+		nonEscaped += string(s.c)
+		var err = s.next()
+		if err != nil {
+			return "", err
+		}
+	}
+	return nonEscaped, nil
 }
 
 // scanCOMMA scans a separator. A separator is a comma, or other rune as set
@@ -259,11 +325,6 @@ func (s *Scanner) scanQuote() (string, error) {
 	return quote, nil
 }
 
-func (s *Scanner) scanTEXTDATA() (string, error) {
-	// TODO: implement scanTEXTDATA.
-	return "", nil
-}
-
 func (s *Scanner) isQuote(c rune) bool {
 	if c == '"' {
 		return true
@@ -276,4 +337,8 @@ func (s *Scanner) isQuote(c rune) bool {
 
 func (s *Scanner) isLineEnd(c rune) bool {
 	return c == '\n'
+}
+
+func (s *Scanner) isComma(c rune) bool {
+	return c == s.rule.separator
 }
