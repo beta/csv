@@ -26,6 +26,14 @@ John,Smith,0,true,1234567890`
 type Person struct {
 	FirstName string `csv:"first_name"`
 	LastName  string `csv:"last_name"`
+	Age       int    `csv:"age"`
+	Married   bool   `csv:"married"`
+	Phone     Phone  `csv:"phone"`
+}
+
+type PersonValidatingAge struct {
+	FirstName string `csv:"first_name"`
+	LastName  string `csv:"last_name"`
 	Age       int    `csv:"age,age"`
 	Married   bool   `csv:"married"`
 	Phone     Phone  `csv:"phone"`
@@ -84,7 +92,7 @@ func TestUnmarshalInvalidType(t *testing.T) {
 }
 
 func TestUnmarshalWithValidator(t *testing.T) {
-	var persons []*Person
+	var persons []*PersonValidatingAge
 	var err = csv.Unmarshal([]byte(invalidAgeCalendarCSV), &persons,
 		csv.Validator("age", validateAge))
 	if err != nil {
