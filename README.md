@@ -1,6 +1,6 @@
 # CSV
 
-A Golang package for scanning, parsing and generating CSV-like documents.
+A Golang package for reading and writing CSV-like documents.
 
 Working in progress.
 
