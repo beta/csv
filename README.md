@@ -26,10 +26,14 @@ TBD.
 
 ### Common settings
 
-| Setting                       | Description                                                                      | Default        |
-| ----------------------------- | -------------------------------------------------------------------------------- | -------------- |
-| `Encoding(encoding.Encoding)` | Sets the character encoding used while reading and writing a document.           | `unicode.UTF8` |
-| `Separator(rune)`             | Sets the separator used to separate fields while reading and writing a document. | `,`            |
+| Setting                       | Description                                                                                                           | Default        |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------- |
+| `Encoding(encoding.Encoding)` | Sets the character encoding used while reading and writing a document.                                                | `unicode.UTF8` |
+| `Separator(rune)`             | Sets the separator used to separate fields while reading and writing a document.                                      | `,`            |
+| `HeaderPrefix(rune)`          | Sets the prefix of every header name while reading and writing a document. This setting will also set `Header(true)`. |                |
+| `HeaderSuffix(rune)`          | Sets the suffix of every header name while reading and writing a document. This setting will also set `Header(true)`. |                |
+| `FieldPrefix(rune)`           | Sets the prefix of every field while reading and writing a document.                                                  |                |
+| `FieldPrefix(rune)`           | Sets the suffix of every field while reading and writing a document.                                                  |                |
 
 ### Scanner settings
 
@@ -39,8 +43,7 @@ TBD.
 | `AllowEmptyField(bool)`   | Sets whether empty fields are allowed while scanning a document.                        | `true`  |
 | `OmitLeadingSpace(bool)`  | Sets whether the leading spaces of fields should be omitted while scanning a document.  | `true`  |
 | `OmitTrailingSpace(bool)` | Sets whether the trailing spaces of fields should be omitted while scanning a document. | `true`  |
-| `AllowComment(bool)`      | Sets whether comments are allowed (and ignored) while scanning a document.              | `true`  |
-| `Comment(rune)`           | Sets the leading rune of comments used while scanning a document.                       | `';'`   |
+| `Comment(rune)`           | Sets the leading rune of comments used while scanning a document.                       |         |
 | `Header(bool)`            | Sets whether there is a header to be read while scanning the document.                  | `false` |
 
 ### Unmarshaler settings

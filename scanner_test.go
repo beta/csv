@@ -58,6 +58,12 @@ const csvWithEmptyField = `aaa,bbb,
 ,"b
   bb","ccc"`
 
+const csvWithPrefixAndSuffix = `[Col A],[Col B],[Col C]
+(aaa),(bbb),(ccc)
+("aaa"),(bbb),("ccc")
+(aaa),("b
+bb"),("ccc")`
+
 func TestScanner(t *testing.T) {
 	_, rows, err := csv.Scan([]byte(csvStandard))
 	if err != nil {
@@ -135,8 +141,22 @@ func TestScannerWithEmptyField(t *testing.T) {
 	printRows(t, rows)
 }
 
+func TestScannerWithPrefixAndSuffix(t *testing.T) {
+	header, rows, err := csv.Scan([]byte(csvWithPrefixAndSuffix),
+		csv.Header(true),
+		csv.HeaderPrefix('['), csv.HeaderSuffix(']'),
+		csv.FieldPrefix('('), csv.FieldSuffix(')'))
+	if err != nil {
+		t.Error(err)
+	}
+	printHeader(t, header)
+	printRows(t, rows)
+}
+
 func printHeader(t *testing.T, header []string) {
-	t.Logf("Header: [%s]\n", strings.Join(header, ", "))
+	if len(header) > 0 {
+		t.Logf("Header: [%s]\n", strings.Join(header, ", "))
+	}
 }
 
 func printRows(t *testing.T, rows [][]string) {

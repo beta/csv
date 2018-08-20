@@ -15,8 +15,12 @@ const noRune = '\x00'
 
 type rule struct {
 	// Common rules.
-	encoding  encoding.Encoding
-	separator rune
+	encoding     encoding.Encoding
+	separator    rune
+	headerPrefix rune
+	headerSuffix rune
+	fieldPrefix  rune
+	fieldSuffix  rune
 
 	// Scanner rules.
 	allowSingleQuote  bool
@@ -32,8 +36,12 @@ type rule struct {
 
 var defaultRule = rule{
 	// Common rules.
-	encoding:  unicode.UTF8,
-	separator: ',',
+	encoding:     unicode.UTF8,
+	separator:    ',',
+	headerPrefix: noRune,
+	headerSuffix: noRune,
+	fieldPrefix:  noRune,
+	fieldSuffix:  noRune,
 
 	// Scanner rules.
 	allowSingleQuote:  true,
@@ -68,15 +76,56 @@ func Separator(sep rune) Setting {
 	}
 }
 
+// HeaderPrefix sets the prefix of every header name while reading and writing a document.
+//
+// This setting will also set Header(true).
+func HeaderPrefix(prefix rune) Setting {
+	return func(r *rule) {
+		r.header = true
+		r.headerPrefix = prefix
+	}
+}
+
+// HeaderSuffix sets the suffix of every header name while reading and writing to a document.
+//
+// This setting will also set Header(true).
+func HeaderSuffix(suffix rune) Setting {
+	return func(r *rule) {
+		r.header = true
+		r.headerSuffix = suffix
+	}
+}
+
+// FieldPrefix sets the prefix of every field while reading and writing a document.
+func FieldPrefix(prefix rune) Setting {
+	return func(r *rule) {
+		r.fieldPrefix = prefix
+	}
+}
+
+// FieldSuffix sets the suffix of every field when reading and writing a document.
+func FieldSuffix(suffix rune) Setting {
+	return func(r *rule) {
+		r.fieldSuffix = suffix
+	}
+}
+
 // RFC4180 sets the parser and generator to work in the exact way as
 // described in RFC 4180.
 func RFC4180() Setting {
 	return func(r *rule) {
+		// Common rules.
+		r.separator = ','
+		r.headerPrefix = noRune
+		r.headerSuffix = noRune
+		r.fieldPrefix = noRune
+		r.fieldSuffix = noRune
+
+		// Scanner rules.
 		r.allowSingleQuote = false
 		r.allowEmptyField = false
 		r.omitLeadingSpace = false
 		r.omitTrailingSpace = false
-		r.comment = '\x00'
-		r.separator = ','
+		r.comment = noRune
 	}
 }

@@ -189,7 +189,7 @@ func (s *scanner) scanComment() error {
 func (s *scanner) scanHeader() ([]string, error) {
 	var header = make([]string, 0)
 
-	name, err := s.scanName()
+	name, err := s.scanName(s.rule.headerPrefix, s.rule.headerSuffix)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (s *scanner) scanHeader() ([]string, error) {
 			return nil, err
 		}
 
-		name, err := s.scanName()
+		name, err := s.scanName(s.rule.headerPrefix, s.rule.headerSuffix)
 		if err != nil {
 			return nil, err
 		}
@@ -217,7 +217,7 @@ func (s *scanner) scanHeader() ([]string, error) {
 
 func (s *scanner) scanRecord() ([]string, error) {
 	var fields = make([]string, 0)
-	field, err := s.scanField()
+	field, err := s.scanField(s.rule.fieldPrefix, s.rule.fieldSuffix)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +229,7 @@ func (s *scanner) scanRecord() ([]string, error) {
 			return nil, err
 		}
 
-		field, err := s.scanField()
+		field, err := s.scanField(s.rule.fieldPrefix, s.rule.fieldSuffix)
 		if err != nil {
 			return nil, err
 		}
@@ -248,8 +248,8 @@ func (s *scanner) scanRecord() ([]string, error) {
 //
 // If no header name is found, or the end of a header name could not be found,
 // an error will be returned.
-func (s *scanner) scanName() (string, error) {
-	return s.scanField()
+func (s *scanner) scanName(prefix, suffix rune) (string, error) {
+	return s.scanField(prefix, suffix)
 }
 
 // scanField scans and returns a field.
@@ -259,7 +259,7 @@ func (s *scanner) scanName() (string, error) {
 // separator or line end is found.
 //
 // If the end of a field could not be found, an error will be returned.
-func (s *scanner) scanField() (string, error) {
+func (s *scanner) scanField(prefix, suffix rune) (string, error) {
 	if s.rule.omitLeadingSpace {
 		_, err := s.scanSPACE()
 		if err != nil {
@@ -267,15 +267,38 @@ func (s *scanner) scanField() (string, error) {
 		}
 	}
 
+	if prefix != noRune {
+		if s.c == prefix {
+			var err = s.next()
+			if err != nil {
+				return "", err
+			}
+		} else {
+			return "", fmt.Errorf("prefix not found")
+		}
+	}
+
 	var field string
 	var err error
 	if s.isQuote(s.c) {
 		field, err = s.scanEscaped()
+		if err != nil {
+			return "", err
+		}
+		if suffix != noRune {
+			if s.c != suffix {
+				return "", fmt.Errorf("suffix not found")
+			}
+			err = s.next()
+			if err != nil {
+				return "", err
+			}
+		}
 	} else {
-		field, err = s.scanNonEscaped()
-	}
-	if err != nil {
-		return "", err
+		field, err = s.scanNonEscaped(suffix)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	if s.rule.omitTrailingSpace {
@@ -344,7 +367,7 @@ func (s *scanner) scanEscaped() (string, error) {
 	return "", fmt.Errorf("trailing quote not found")
 }
 
-func (s *scanner) scanNonEscaped() (string, error) {
+func (s *scanner) scanNonEscaped(suffix rune) (string, error) {
 	if (s.isComma(s.c) || s.isLineEnd(s.c) || s.eof) && !s.rule.allowEmptyField {
 		return "", fmt.Errorf("unexpected empty field, expect text")
 	}
@@ -353,8 +376,19 @@ func (s *scanner) scanNonEscaped() (string, error) {
 	}
 
 	var nonEscaped string
-	for !s.eof && !s.isLineEnd(s.c) && !s.isComma(s.c) {
+	for !s.eof && !s.isLineEnd(s.c) && !s.isComma(s.c) && (suffix == noRune || s.c != suffix) {
 		nonEscaped += string(s.c)
+		var err = s.next()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// Suffix.
+	if suffix != noRune {
+		if s.c != suffix {
+			return "", fmt.Errorf("suffix not found")
+		}
 		var err = s.next()
 		if err != nil {
 			return "", err
