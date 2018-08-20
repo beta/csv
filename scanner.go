@@ -7,6 +7,7 @@ package csv
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -14,8 +15,8 @@ import (
 	"golang.org/x/text/transform"
 )
 
-// NewScanner creates and returns a new scanner from file with the given settings.
-func NewScanner(file io.Reader, settings ...Setting) *Scanner {
+// NewScanner creates and returns a new scanner from a byte slice with the given settings.
+func NewScanner(data []byte, settings ...Setting) *Scanner {
 	var s = &Scanner{
 		rule: defaultRule,
 	}
@@ -23,7 +24,7 @@ func NewScanner(file io.Reader, settings ...Setting) *Scanner {
 		setting(&s.rule)
 	}
 
-	s.f = bufio.NewReader(transform.NewReader(file, s.rule.encoding.NewDecoder()))
+	s.f = bufio.NewReader(transform.NewReader(bytes.NewReader(data), s.rule.encoding.NewDecoder()))
 	return s
 }
 
