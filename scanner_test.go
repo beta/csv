@@ -60,6 +60,11 @@ const csvWithSpace = `aaa ,bbb, ccc
  aaa, "b
   bb"  ,  "ccc"`
 
+const csvWithEmptyField = `aaa,bbb,
+"aaa",,"ccc"
+,"b
+  bb","ccc"`
+
 func TestScanner(t *testing.T) {
 	var scanner = csv.NewScanner(strings.NewReader(csvStandard))
 	_, rows, err := scanner.Scan()
@@ -139,6 +144,15 @@ func TestScannerWithCustomComment(t *testing.T) {
 func TestScannerWithSpace(t *testing.T) {
 	var scanner = csv.NewScanner(strings.NewReader(csvWithSpace),
 		csv.OmitLeadingSpace(true), csv.OmitTrailingSpace(true))
+	_, rows, err := scanner.Scan()
+	if err != nil {
+		t.Error(err)
+	}
+	printRows(t, rows)
+}
+
+func TestScannerWithEmptyField(t *testing.T) {
+	var scanner = csv.NewScanner(strings.NewReader(csvWithEmptyField), csv.AllowEmptyField(true))
 	_, rows, err := scanner.Scan()
 	if err != nil {
 		t.Error(err)

@@ -14,6 +14,7 @@ import (
 type rule struct {
 	encoding          encoding.Encoding
 	allowSingleQuote  bool
+	allowEmptyField   bool
 	omitLeadingSpace  bool
 	omitTrailingSpace bool
 	allowComment      bool
@@ -25,6 +26,7 @@ type rule struct {
 var defaultRule = rule{
 	encoding:          unicode.UTF8,
 	allowSingleQuote:  true,
+	allowEmptyField:   true,
 	omitLeadingSpace:  true,
 	omitTrailingSpace: true,
 	allowComment:      true,
@@ -47,6 +49,12 @@ var (
 	AllowSingleQuote = func(v bool) Setting {
 		return func(r *rule) {
 			r.allowSingleQuote = v
+		}
+	}
+	// AllowEmptyField sets whether empty fields are allowed.
+	AllowEmptyField = func(v bool) Setting {
+		return func(r *rule) {
+			r.allowEmptyField = v
 		}
 	}
 	// OmitLeadingSpace sets whether the leading spaces of a field should be omitted.
@@ -91,6 +99,7 @@ var (
 	RFC4180 = func() Setting {
 		return func(r *rule) {
 			r.allowSingleQuote = false
+			r.allowEmptyField = false
 			r.omitLeadingSpace = false
 			r.omitTrailingSpace = false
 			r.allowComment = false

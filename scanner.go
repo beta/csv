@@ -199,8 +199,7 @@ func (s *Scanner) scanName() (string, error) {
 // found. If the field does not start with a quote, scanField scans until a
 // separator or line end is found.
 //
-// If no field is found, or the end of a field could not be found, an error will
-// be returned.
+// If the end of a field could not be found, an error will be returned.
 func (s *Scanner) scanField() (string, error) {
 	if s.rule.omitLeadingSpace {
 		_, err := s.scanSPACE()
@@ -287,7 +286,10 @@ func (s *Scanner) scanEscaped() (string, error) {
 }
 
 func (s *Scanner) scanNonEscaped() (string, error) {
-	if s.isComma(s.c) || s.isLineEnd(s.c) || s.isQuote(s.c) {
+	if (s.isComma(s.c) || s.isLineEnd(s.c) || s.eof) && !s.rule.allowEmptyField {
+		return "", fmt.Errorf("unexpected empty field, expect text")
+	}
+	if s.isQuote(s.c) {
 		return "", fmt.Errorf("unexpected character '%s', expect text", string(s.c))
 	}
 
