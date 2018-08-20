@@ -24,22 +24,37 @@ TBD.
 
 `csv` uses setting functions for customization. Below lists the settings supported by `csv`.
 
-| Name and params               | Description                                                                            | Default        |
-| ----------------------------- | -------------------------------------------------------------------------------------- | -------------- |
-| `Encoding(encoding.Encoding)` | Sets the character encoding used while reading and writing a document.                 | `unicode.UTF8` |
-| `AllowSingleQuote(bool)`      | Sets whether single quotes are allowed while reading a document.                       | `true`         |
-| `AllowEmptyField(bool)`       | Sets whether empty fields are allowed while reading a document.                        | `true`         |
-| `OmitLeadingSpace(bool)`      | Sets whether the leading spaces of fields should be omitted while reading a document.  | `true`         |
-| `OmitTrailingSpace(bool)`     | Sets whether the trailing spaces of fields should be omitted while reading a document. | `true`         |
-| `AllowComment(bool)`          | Sets whether comments are allowed (and ignored) while reading a document.              | `true`         |
-| `Comment(rune)`               | Sets the leading rune of comments used while reading a document.                       | `;`            |
-| `Header(bool)`                | Sets whether there is a header to be read while reading the document.                  | `false`        |
-| `Separator(rune)`             | Sets the separator used to separate fields while reading and writing a document.       | `,`            |
+### Common settings
 
-To use a setting, pass it to the `New...` functions. For example:
+| Setting                       | Description                                                                      | Default        |
+| ----------------------------- | -------------------------------------------------------------------------------- | -------------- |
+| `Encoding(encoding.Encoding)` | Sets the character encoding used while reading and writing a document.           | `unicode.UTF8` |
+| `Separator(rune)`             | Sets the separator used to separate fields while reading and writing a document. | `,`            |
+
+### Scanner settings
+
+| Setting                   | Description                                                                             | Default |
+| ------------------------- | --------------------------------------------------------------------------------------- | ------- |
+| `AllowSingleQuote(bool)`  | Sets whether single quotes are allowed while scanning a document.                       | `true`  |
+| `AllowEmptyField(bool)`   | Sets whether empty fields are allowed while scanning a document.                        | `true`  |
+| `OmitLeadingSpace(bool)`  | Sets whether the leading spaces of fields should be omitted while scanning a document.  | `true`  |
+| `OmitTrailingSpace(bool)` | Sets whether the trailing spaces of fields should be omitted while scanning a document. | `true`  |
+| `AllowComment(bool)`      | Sets whether comments are allowed (and ignored) while scanning a document.              | `true`  |
+| `Comment(rune)`           | Sets the leading rune of comments used while scanning a document.                       | `';'`   |
+| `Header(bool)`            | Sets whether there is a header to be read while scanning the document.                  | `false` |
+
+### Unmarshaler settings
+
+| Setting                                     | Description                                                                             | Default |
+| ------------------------------------------- | --------------------------------------------------------------------------------------- | ------- |
+| `Validator(string, func(interface{}) bool)` | Adds a new validator function for validating a CSV value while unmarshaling a document. |         |
+
+All scanner settings can be used in an unmarshaler. Also, all generator settings can be used in an marshaler.
+
+To use a setting, pass it to the target `New...` function. For example:
 
 ```go
-var scanner = csv.NewScanner(r, csv.AllowEmptyField(true), csv.Header(true))
+var scanner = csv.NewScanner(..., csv.AllowEmptyField(true), csv.Header(true))
 ```
 
 Beside the settings above, there's a special setting named `RFC4180` which applies the requirements as described in [RFC 4180](https://tools.ietf.org/html/rfc4180), including

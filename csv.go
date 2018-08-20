@@ -12,27 +12,36 @@ import (
 )
 
 type rule struct {
-	encoding          encoding.Encoding
+	// Common rules.
+	encoding  encoding.Encoding
+	separator rune
+
+	// Scanner rules.
 	allowSingleQuote  bool
 	allowEmptyField   bool
 	omitLeadingSpace  bool
 	omitTrailingSpace bool
 	allowComment      bool
 	comment           rune
-	separator         rune
 	header            bool
+
+	// Unmarshaler rules.
+	validators map[string]func(interface{}) bool
 }
 
 var defaultRule = rule{
-	encoding:          unicode.UTF8,
+	encoding:  unicode.UTF8,
+	separator: ',',
+
 	allowSingleQuote:  true,
 	allowEmptyField:   true,
 	omitLeadingSpace:  true,
 	omitTrailingSpace: true,
 	allowComment:      true,
 	comment:           ';',
-	separator:         ',',
 	header:            false,
+
+	validators: nil,
 }
 
 // A Setting provides information on how documents should be parsed.

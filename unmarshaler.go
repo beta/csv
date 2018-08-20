@@ -18,6 +18,19 @@ const csvTagName = "csv"
 
 var textUnmarshalerType = reflect.TypeOf(new(encoding.TextUnmarshaler)).Elem()
 
+var (
+	// Validator adds a new validator functions for validating a CSV value while
+	// unmarshaling a document.
+	Validator = func(name string, validator func(interface{}) bool) Setting {
+		return func(r *rule) {
+			if r.validators == nil {
+				r.validators = make(map[string]func(interface{}) bool)
+			}
+			r.validators[name] = validator
+		}
+	}
+)
+
 // Unmarshal parses a CSV document and stores the result in the struct slice
 // pointed to by dest. If dest is nil or not a pointer to a struct slice,
 // Unmarshal returns an InvalidUnmarshalError.
@@ -36,14 +49,21 @@ func Unmarshal(data []byte, dest interface{}, settings ...Setting) error {
 }
 
 func newUnmarshaler(data []byte, dest interface{}, settings ...Setting) *unmarshaler {
-	return &unmarshaler{
+	var u = &unmarshaler{
+		rule:     defaultRule,
 		data:     data,
 		dest:     dest,
 		settings: settings,
 	}
+	for _, setting := range settings {
+		setting(&u.rule)
+	}
+	return u
 }
 
 type unmarshaler struct {
+	rule rule
+
 	data     []byte
 	dest     interface{}
 	settings []Setting
@@ -64,10 +84,16 @@ func (u *unmarshaler) prepareFields() {
 				continue
 			}
 
+			var validatorNames = make([]string, 0, len(tagParts)-1)
+			for i := 1; i < len(tagParts); i++ {
+				validatorNames = append(validatorNames, tagParts[i])
+			}
+
 			var field = &field{
-				Name:    structField.Name,
-				Type:    structField.Type,
-				CSVName: csvName,
+				Name:           structField.Name,
+				Type:           structField.Type,
+				CSVName:        csvName,
+				ValidatorNames: validatorNames,
 			}
 			fieldMap[csvName] = field
 		}
@@ -77,9 +103,10 @@ func (u *unmarshaler) prepareFields() {
 
 // Info of a field in the target struct.
 type field struct {
-	Name    string
-	Type    reflect.Type
-	CSVName string
+	Name           string
+	Type           reflect.Type
+	CSVName        string
+	ValidatorNames []string
 }
 
 func (u *unmarshaler) unmarshal() error {
@@ -128,7 +155,7 @@ func (u *unmarshaler) unmarshalRecord(dest reflect.Value, header []string, row [
 			continue
 		}
 
-		var err = u.unmarshalField(dest.Elem().FieldByName(field.Name), value)
+		var err = u.unmarshalField(field, dest.Elem().FieldByName(field.Name), value)
 		if err != nil {
 			return err
 		}
@@ -136,7 +163,18 @@ func (u *unmarshaler) unmarshalRecord(dest reflect.Value, header []string, row [
 	return nil
 }
 
-func (u *unmarshaler) unmarshalField(dest reflect.Value, value string) error {
+func (u *unmarshaler) unmarshalField(field *field, dest reflect.Value, value string) error {
+	// Validation.
+	for _, validatorName := range field.ValidatorNames {
+		validator, exist := u.rule.validators[validatorName]
+		if !exist {
+			return fmt.Errorf("csv: cannot find validator %s", validatorName)
+		}
+		if !validator(value) {
+			return fmt.Errorf("csv: invalid value %s for field %s", value, field.Name)
+		}
+	}
+
 	if tu, ok := dest.Interface().(encoding.TextUnmarshaler); ok {
 		return tu.UnmarshalText([]byte(value))
 		// dest.Interface().(encoding.TextUnmarshaler).UnmarshalText([]byte(value))
