@@ -39,58 +39,59 @@ var defaultRule = rule{
 type Setting func(*rule)
 
 var (
-	// Encoding sets the character encoding used to read or write to the document.
+	// Encoding sets the character encoding used while reading and writing a document.
 	Encoding = func(enc encoding.Encoding) Setting {
 		return func(r *rule) {
 			r.encoding = enc
 		}
 	}
-	// AllowSingleQuote sets whether single quotes are allowed in the document.
+
+	// AllowSingleQuote sets whether single quotes are allowed while reading a document.
 	AllowSingleQuote = func(v bool) Setting {
 		return func(r *rule) {
 			r.allowSingleQuote = v
 		}
 	}
-	// AllowEmptyField sets whether empty fields are allowed.
+	// AllowEmptyField sets whether empty fields are allowed while reading a document.
 	AllowEmptyField = func(v bool) Setting {
 		return func(r *rule) {
 			r.allowEmptyField = v
 		}
 	}
-	// OmitLeadingSpace sets whether the leading spaces of a field should be omitted.
+	// OmitLeadingSpace sets whether the leading spaces of fields should be omitted while reading a document.
 	OmitLeadingSpace = func(v bool) Setting {
 		return func(r *rule) {
 			r.omitLeadingSpace = v
 		}
 	}
-	// OmitTrailingSpace sets whether the trailing spaces of a field should be omitted.
+	// OmitTrailingSpace sets whether the trailing spaces of fields should be omitted while reading a document.
 	OmitTrailingSpace = func(v bool) Setting {
 		return func(r *rule) {
 			r.omitTrailingSpace = v
 		}
 	}
-	// AllowComment sets whether comments are allowed.
+	// AllowComment sets whether comments are allowed (and ignored) while reading a document.
 	AllowComment = func(v bool) Setting {
 		return func(r *rule) {
 			r.allowComment = v
 		}
 	}
-	// Comment sets the leading rune of comments.
+	// Comment sets the leading rune of comments used while reading a document.
 	Comment = func(comment rune) Setting {
 		return func(r *rule) {
 			r.comment = comment
 		}
 	}
-	// Separator sets the separator used to separate fields.
-	Separator = func(sep rune) Setting {
-		return func(r *rule) {
-			r.separator = sep
-		}
-	}
-	// Header sets whether there is a header row in the document.
+	// Header sets whether there is a header to be read while reading the document.
 	Header = func(v bool) Setting {
 		return func(r *rule) {
 			r.header = v
+		}
+	}
+	// Separator sets the separator used to separate fields while reading and writing a document.
+	Separator = func(sep rune) Setting {
+		return func(r *rule) {
+			r.separator = sep
 		}
 	}
 
