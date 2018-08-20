@@ -116,8 +116,16 @@ type field struct {
 func (u *unmarshaler) unmarshal() error {
 	u.prepareFields()
 
-	var settings = append(u.settings, Header(true))
-	header, rows, err := Scan(u.data, settings...)
+	s, err := NewScanner(u.data, u.settings...)
+	if err != nil {
+		return err
+	}
+
+	header, err := s.Scan()
+	if err != nil {
+		return err
+	}
+	rows, err := s.ScanAll()
 	if err != nil {
 		return err
 	}

@@ -26,14 +26,12 @@ TBD.
 
 ### Common settings
 
-| Setting                       | Description                                                                                                           | Default        |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------- |
-| `Encoding(encoding.Encoding)` | Sets the character encoding used while reading and writing a document.                                                | `unicode.UTF8` |
-| `Separator(rune)`             | Sets the separator used to separate fields while reading and writing a document.                                      | `,`            |
-| `HeaderPrefix(rune)`          | Sets the prefix of every header name while reading and writing a document. This setting will also set `Header(true)`. |                |
-| `HeaderSuffix(rune)`          | Sets the suffix of every header name while reading and writing a document. This setting will also set `Header(true)`. |                |
-| `FieldPrefix(rune)`           | Sets the prefix of every field while reading and writing a document.                                                  |                |
-| `FieldPrefix(rune)`           | Sets the suffix of every field while reading and writing a document.                                                  |                |
+| Setting                       | Description                                                                      | Default        |
+| ----------------------------- | -------------------------------------------------------------------------------- | -------------- |
+| `Encoding(encoding.Encoding)` | Sets the character encoding used while reading and writing a document.           | `unicode.UTF8` |
+| `Separator(rune)`             | Sets the separator used to separate fields while reading and writing a document. | `,`            |
+| `Prefix(rune)`                | Sets the prefix of every field while reading and writing a document.             |                |
+| `Suffix(rune)`                | Sets the suffix of every field while reading and writing a document.             |                |
 
 ### Scanner settings
 
@@ -44,7 +42,6 @@ TBD.
 | `OmitLeadingSpace(bool)`  | Sets whether the leading spaces of fields should be omitted while scanning a document.  | `true`  |
 | `OmitTrailingSpace(bool)` | Sets whether the trailing spaces of fields should be omitted while scanning a document. | `true`  |
 | `Comment(rune)`           | Sets the leading rune of comments used while scanning a document.                       |         |
-| `Header(bool)`            | Sets whether there is a header to be read while scanning the document.                  | `false` |
 
 ### Unmarshaler settings
 
@@ -52,15 +49,22 @@ TBD.
 | ------------------------------------------- | --------------------------------------------------------------------------------------- | ------- |
 | `Validator(string, func(interface{}) bool)` | Adds a new validator function for validating a CSV value while unmarshaling a document. |         |
 
+### Marshaler settings
+
+| Setting             | Description                                                       | Default |
+| ------------------- | ----------------------------------------------------------------- | ------- |
+| `WriteHeader(bool)` | Sets whether to output the header row while writing the document. | `true`  |
+
 All scanner settings can be used in an unmarshaler. Also, all generator settings can be used in an marshaler.
 
 Beside the settings above, there's a special setting named `RFC4180` which applies the requirements as described in [RFC 4180](https://tools.ietf.org/html/rfc4180), including
 
+- using `,` as the separator,
+- no prefix and suffix,
 - not allowing single quotes,
 - not allowing empty fields,
-- not omitting leading and trailing spaces,
-- not allowing comments, and
-- using `,` as the separator.
+- not omitting leading and trailing spaces, and
+- not allowing comments.
 
 ## License
 

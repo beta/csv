@@ -15,12 +15,10 @@ const noRune = '\x00'
 
 type rule struct {
 	// Common rules.
-	encoding     encoding.Encoding
-	separator    rune
-	headerPrefix rune
-	headerSuffix rune
-	fieldPrefix  rune
-	fieldSuffix  rune
+	encoding  encoding.Encoding
+	separator rune
+	prefix    rune
+	suffix    rune
 
 	// Scanner rules.
 	allowSingleQuote  bool
@@ -28,20 +26,20 @@ type rule struct {
 	omitLeadingSpace  bool
 	omitTrailingSpace bool
 	comment           rune
-	header            bool
 
 	// Unmarshaler rules.
 	validators map[string]func(interface{}) bool
+
+	// Marshaler rules.
+	writeHeader bool
 }
 
 var defaultRule = rule{
 	// Common rules.
-	encoding:     unicode.UTF8,
-	separator:    ',',
-	headerPrefix: noRune,
-	headerSuffix: noRune,
-	fieldPrefix:  noRune,
-	fieldSuffix:  noRune,
+	encoding:  unicode.UTF8,
+	separator: ',',
+	prefix:    noRune,
+	suffix:    noRune,
 
 	// Scanner rules.
 	allowSingleQuote:  true,
@@ -49,10 +47,12 @@ var defaultRule = rule{
 	omitLeadingSpace:  true,
 	omitTrailingSpace: true,
 	comment:           noRune,
-	header:            false,
 
 	// Unmarshaler rules.
 	validators: nil,
+
+	// Marshaler rules.
+	writeHeader: true,
 }
 
 // A Setting provides information on how documents should be parsed.
@@ -76,37 +76,17 @@ func Separator(sep rune) Setting {
 	}
 }
 
-// HeaderPrefix sets the prefix of every header name while reading and writing a document.
-//
-// This setting will also set Header(true).
-func HeaderPrefix(prefix rune) Setting {
+// Prefix sets the prefix of every field while reading and writing a document.
+func Prefix(prefix rune) Setting {
 	return func(r *rule) {
-		r.header = true
-		r.headerPrefix = prefix
+		r.prefix = prefix
 	}
 }
 
-// HeaderSuffix sets the suffix of every header name while reading and writing to a document.
-//
-// This setting will also set Header(true).
-func HeaderSuffix(suffix rune) Setting {
+// Suffix sets the suffix of every field when reading and writing a document.
+func Suffix(suffix rune) Setting {
 	return func(r *rule) {
-		r.header = true
-		r.headerSuffix = suffix
-	}
-}
-
-// FieldPrefix sets the prefix of every field while reading and writing a document.
-func FieldPrefix(prefix rune) Setting {
-	return func(r *rule) {
-		r.fieldPrefix = prefix
-	}
-}
-
-// FieldSuffix sets the suffix of every field when reading and writing a document.
-func FieldSuffix(suffix rune) Setting {
-	return func(r *rule) {
-		r.fieldSuffix = suffix
+		r.suffix = suffix
 	}
 }
 
@@ -116,10 +96,8 @@ func RFC4180() Setting {
 	return func(r *rule) {
 		// Common rules.
 		r.separator = ','
-		r.headerPrefix = noRune
-		r.headerSuffix = noRune
-		r.fieldPrefix = noRune
-		r.fieldSuffix = noRune
+		r.prefix = noRune
+		r.suffix = noRune
 
 		// Scanner rules.
 		r.allowSingleQuote = false
