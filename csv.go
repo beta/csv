@@ -11,6 +11,8 @@ import (
 	"golang.org/x/text/encoding/unicode"
 )
 
+const noRune = '\x00'
+
 type rule struct {
 	// Common rules.
 	encoding  encoding.Encoding
@@ -21,7 +23,6 @@ type rule struct {
 	allowEmptyField   bool
 	omitLeadingSpace  bool
 	omitTrailingSpace bool
-	allowComment      bool
 	comment           rune
 	header            bool
 
@@ -30,76 +31,33 @@ type rule struct {
 }
 
 var defaultRule = rule{
+	// Common rules.
 	encoding:  unicode.UTF8,
 	separator: ',',
 
+	// Scanner rules.
 	allowSingleQuote:  true,
 	allowEmptyField:   true,
 	omitLeadingSpace:  true,
 	omitTrailingSpace: true,
-	allowComment:      true,
-	comment:           ';',
+	comment:           noRune,
 	header:            false,
 
+	// Unmarshaler rules.
 	validators: nil,
 }
 
 // A Setting provides information on how documents should be parsed.
 type Setting func(*rule)
 
+//==============================================================================
+// Common settings.
+//==============================================================================
+
 // Encoding sets the character encoding used while reading and writing a document.
 func Encoding(enc encoding.Encoding) Setting {
 	return func(r *rule) {
 		r.encoding = enc
-	}
-}
-
-// AllowSingleQuote sets whether single quotes are allowed while reading a document.
-func AllowSingleQuote(v bool) Setting {
-	return func(r *rule) {
-		r.allowSingleQuote = v
-	}
-}
-
-// AllowEmptyField sets whether empty fields are allowed while reading a document.
-func AllowEmptyField(v bool) Setting {
-	return func(r *rule) {
-		r.allowEmptyField = v
-	}
-}
-
-// OmitLeadingSpace sets whether the leading spaces of fields should be omitted while reading a document.
-func OmitLeadingSpace(v bool) Setting {
-	return func(r *rule) {
-		r.omitLeadingSpace = v
-	}
-}
-
-// OmitTrailingSpace sets whether the trailing spaces of fields should be omitted while reading a document.
-func OmitTrailingSpace(v bool) Setting {
-	return func(r *rule) {
-		r.omitTrailingSpace = v
-	}
-}
-
-// AllowComment sets whether comments are allowed (and ignored) while reading a document.
-func AllowComment(v bool) Setting {
-	return func(r *rule) {
-		r.allowComment = v
-	}
-}
-
-// Comment sets the leading rune of comments used while reading a document.
-func Comment(comment rune) Setting {
-	return func(r *rule) {
-		r.comment = comment
-	}
-}
-
-// Header sets whether there is a header to be read while reading the document.
-func Header(v bool) Setting {
-	return func(r *rule) {
-		r.header = v
 	}
 }
 
@@ -118,7 +76,6 @@ func RFC4180() Setting {
 		r.allowEmptyField = false
 		r.omitLeadingSpace = false
 		r.omitTrailingSpace = false
-		r.allowComment = false
 		r.comment = '\x00'
 		r.separator = ','
 	}

@@ -42,13 +42,6 @@ const csvWithSingleQuote = `aaa,bbb,ccc
 b''b',"c''cc"`
 
 const csvWithComment = `aaa,bbb,ccc
-; This is a comment.
-"aaa",bbb,"ccc"
-; This is another comment.
-aaa,"b
-bb","ccc"`
-
-const csvWithCustomComment = `aaa,bbb,ccc
 # This is a comment.
 "aaa",bbb,"ccc"
 # This is another comment.
@@ -118,15 +111,7 @@ func TestScannerWithSingleQuote(t *testing.T) {
 }
 
 func TestScannerWithComment(t *testing.T) {
-	_, rows, err := csv.Scan([]byte(csvWithComment))
-	if err != nil {
-		t.Error(err)
-	}
-	printRows(t, rows)
-}
-
-func TestScannerWithCustomComment(t *testing.T) {
-	_, rows, err := csv.Scan([]byte(csvWithCustomComment), csv.Comment('#'))
+	_, rows, err := csv.Scan([]byte(csvWithComment), csv.Comment('#'))
 	if err != nil {
 		t.Error(err)
 	}

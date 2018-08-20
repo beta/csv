@@ -15,6 +15,56 @@ import (
 	"golang.org/x/text/transform"
 )
 
+//==============================================================================
+// Scanner settings.
+//==============================================================================
+
+// AllowSingleQuote sets whether single quotes are allowed while reading a document.
+func AllowSingleQuote(v bool) Setting {
+	return func(r *rule) {
+		r.allowSingleQuote = v
+	}
+}
+
+// AllowEmptyField sets whether empty fields are allowed while reading a document.
+func AllowEmptyField(v bool) Setting {
+	return func(r *rule) {
+		r.allowEmptyField = v
+	}
+}
+
+// OmitLeadingSpace sets whether the leading spaces of fields should be omitted while reading a document.
+func OmitLeadingSpace(v bool) Setting {
+	return func(r *rule) {
+		r.omitLeadingSpace = v
+	}
+}
+
+// OmitTrailingSpace sets whether the trailing spaces of fields should be omitted while reading a document.
+func OmitTrailingSpace(v bool) Setting {
+	return func(r *rule) {
+		r.omitTrailingSpace = v
+	}
+}
+
+// Comment sets the leading rune of comments used while reading a document.
+func Comment(comment rune) Setting {
+	return func(r *rule) {
+		r.comment = comment
+	}
+}
+
+// Header sets whether there is a header to be read while reading the document.
+func Header(v bool) Setting {
+	return func(r *rule) {
+		r.header = v
+	}
+}
+
+//==============================================================================
+// Scanner.
+//==============================================================================
+
 // Scan scans a CSV document and returns the scanned header and rows.
 //
 // If setting Header(true) is set, the header names will be returned.
@@ -62,7 +112,7 @@ func (s *scanner) Scan() (header []string, rows [][]string, err error) {
 
 	for !s.eof {
 		switch {
-		case s.rule.allowComment && s.c == s.rule.comment:
+		case s.rule.comment != noRune && s.c == s.rule.comment:
 			err = s.scanComment()
 		case !s.headerScanned && s.rule.header:
 			s.header, err = s.scanHeader()

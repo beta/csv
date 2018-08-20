@@ -14,9 +14,9 @@ import (
 	"strings"
 )
 
-const csvTagName = "csv"
-
-var textUnmarshalerType = reflect.TypeOf(new(encoding.TextUnmarshaler)).Elem()
+//==============================================================================
+// Unmarshaler settings.
+//==============================================================================
 
 // Validator adds a new validator functions for validating a CSV value while
 // unmarshaling a document.
@@ -28,6 +28,12 @@ func Validator(name string, validator func(interface{}) bool) Setting {
 		r.validators[name] = validator
 	}
 }
+
+//==============================================================================
+// Unmarshaler.
+//==============================================================================
+
+const csvTagName = "csv"
 
 // Unmarshal parses a CSV document and stores the result in the struct slice
 // pointed to by dest. If dest is nil or not a pointer to a struct slice,
