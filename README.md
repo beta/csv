@@ -1,5 +1,7 @@
 # CSV
 
+<a href="https://godoc.org/github.com/beta/csv">![godoc](https://img.shields.io/badge/godoc-reference-%235272B4.svg)</a>
+
 A Golang package for reading and writing CSV-like documents.
 
 Working in progress.
