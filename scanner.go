@@ -9,6 +9,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"strings"
 
 	"golang.org/x/text/transform"
 )
@@ -168,6 +169,7 @@ func (s *Scanner) scanRecord() ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		field, err := s.scanField()
 		if err != nil {
 			return nil, err
@@ -200,14 +202,37 @@ func (s *Scanner) scanName() (string, error) {
 // If no field is found, or the end of a field could not be found, an error will
 // be returned.
 func (s *Scanner) scanField() (string, error) {
-	if s.isQuote(s.c) {
-		return s.scanEscaped()
+	if s.rule.omitLeadingSpace {
+		_, err := s.scanSPACE()
+		if err != nil {
+			return "", err
+		}
 	}
-	return s.scanNonEscaped()
+
+	var field string
+	var err error
+	if s.isQuote(s.c) {
+		field, err = s.scanEscaped()
+	} else {
+		field, err = s.scanNonEscaped()
+	}
+	if err != nil {
+		return "", err
+	}
+
+	if s.rule.omitTrailingSpace {
+		field = strings.TrimRightFunc(field, s.isSpace)
+		_, err := s.scanSPACE()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return field, nil
 }
 
 func (s *Scanner) scanEscaped() (string, error) {
-	leadingQuote, err := s.scanQuote()
+	leadingQuote, err := s.scanQUOTE()
 	if err != nil {
 		return "", err
 	}
@@ -262,13 +287,8 @@ func (s *Scanner) scanEscaped() (string, error) {
 }
 
 func (s *Scanner) scanNonEscaped() (string, error) {
-	if s.rule.omitLeadingSpace {
-		for !s.eof && !s.isLineEnd(s.c) && s.c == ' ' {
-			var err = s.next()
-			if err != nil {
-				return "", err
-			}
-		}
+	if s.isComma(s.c) || s.isLineEnd(s.c) || s.isQuote(s.c) {
+		return "", fmt.Errorf("unexpected character '%s', expect text", string(s.c))
 	}
 
 	var nonEscaped string
@@ -311,9 +331,9 @@ func (s *Scanner) scanCRLF() (string, error) {
 	return lineEnd, nil
 }
 
-// scanQuote scans and returns a quote. By default, both double and single quote
+// scanQUOTE scans and returns a quote. By default, both double and single quote
 // are allowed. This can be changed with the AllowSingleQuote() setting.
-func (s *Scanner) scanQuote() (string, error) {
+func (s *Scanner) scanQUOTE() (string, error) {
 	if !s.isQuote(s.c) {
 		return "", fmt.Errorf("unexpected character '%s', expect quote", string(s.c))
 	}
@@ -323,6 +343,19 @@ func (s *Scanner) scanQuote() (string, error) {
 		return "", err
 	}
 	return quote, nil
+}
+
+// scanSPACE scans while the current rune is a space.
+func (s *Scanner) scanSPACE() (string, error) {
+	var spaces string
+	for !s.eof && s.isSpace(s.c) {
+		spaces += string(s.c)
+		var err = s.next()
+		if err != nil {
+			return "", err
+		}
+	}
+	return spaces, nil
 }
 
 func (s *Scanner) isQuote(c rune) bool {
@@ -341,4 +374,12 @@ func (s *Scanner) isLineEnd(c rune) bool {
 
 func (s *Scanner) isComma(c rune) bool {
 	return c == s.rule.separator
+}
+
+func (s *Scanner) isSpace(c rune) bool {
+	switch c {
+	case '\t', '\v', '\f', ' ', 0x85, 0xA0:
+		return true
+	}
+	return false
 }

@@ -12,25 +12,25 @@ import (
 )
 
 type rule struct {
-	encoding               encoding.Encoding
-	allowSingleQuote       bool
-	omitLeadingSpace       bool
-	allowVariableRowLength bool
-	allowComment           bool
-	comment                rune
-	separator              rune
-	header                 bool
+	encoding          encoding.Encoding
+	allowSingleQuote  bool
+	omitLeadingSpace  bool
+	omitTrailingSpace bool
+	allowComment      bool
+	comment           rune
+	separator         rune
+	header            bool
 }
 
 var defaultRule = rule{
-	encoding:               unicode.UTF8,
-	allowSingleQuote:       true,
-	omitLeadingSpace:       true,
-	allowVariableRowLength: true,
-	allowComment:           true,
-	comment:                ';',
-	separator:              ',',
-	header:                 false,
+	encoding:          unicode.UTF8,
+	allowSingleQuote:  true,
+	omitLeadingSpace:  true,
+	omitTrailingSpace: true,
+	allowComment:      true,
+	comment:           ';',
+	separator:         ',',
+	header:            false,
 }
 
 // A Setting provides information on how documents should be parsed.
@@ -55,18 +55,10 @@ var (
 			r.omitLeadingSpace = v
 		}
 	}
-	// AllowVariableRowLength sets whether variable row length is allowed. If
-	// set to true, rows with less field count than others will be allowed, and
-	// the missing fields will be set as empty string.
-	//
-	// If a row has more fields than any of the rows above, empty fields will be
-	// appended to all the rows to achieve the same field count.
-	//
-	// If the document has a header, the field count of rows must not be longer
-	// than the header, or an error will be raised.
-	AllowVariableRowLength = func(v bool) Setting {
+	// OmitTrailingSpace sets whether the trailing spaces of a field should be omitted.
+	OmitTrailingSpace = func(v bool) Setting {
 		return func(r *rule) {
-			r.allowVariableRowLength = v
+			r.omitTrailingSpace = v
 		}
 	}
 	// AllowComment sets whether comments are allowed.
@@ -100,6 +92,7 @@ var (
 		return func(r *rule) {
 			r.allowSingleQuote = false
 			r.omitLeadingSpace = false
+			r.omitTrailingSpace = false
 			r.allowComment = false
 			r.comment = '\x00'
 			r.separator = ','
