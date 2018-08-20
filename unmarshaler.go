@@ -111,8 +111,7 @@ func (u *unmarshaler) unmarshal() error {
 	u.prepareFields()
 
 	var settings = append(u.settings, Header(true))
-	var scanner = NewScanner(u.data, settings...)
-	header, rows, err := scanner.Scan()
+	header, rows, err := Scan(u.data, settings...)
 	if err != nil {
 		return err
 	}

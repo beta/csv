@@ -66,8 +66,7 @@ const csvWithEmptyField = `aaa,bbb,
   bb","ccc"`
 
 func TestScanner(t *testing.T) {
-	var scanner = csv.NewScanner([]byte(csvStandard))
-	_, rows, err := scanner.Scan()
+	_, rows, err := csv.Scan([]byte(csvStandard))
 	if err != nil {
 		t.Error(err)
 	}
@@ -75,8 +74,7 @@ func TestScanner(t *testing.T) {
 }
 
 func TestScannerRFC4180(t *testing.T) {
-	var scanner = csv.NewScanner([]byte(csvStandard), csv.RFC4180())
-	_, rows, err := scanner.Scan()
+	_, rows, err := csv.Scan([]byte(csvStandard), csv.RFC4180())
 	if err != nil {
 		t.Error(err)
 	}
@@ -84,8 +82,7 @@ func TestScannerRFC4180(t *testing.T) {
 }
 
 func TestScannerEscaped(t *testing.T) {
-	var scanner = csv.NewScanner([]byte(csvEscaped))
-	_, rows, err := scanner.Scan()
+	_, rows, err := csv.Scan([]byte(csvEscaped))
 	if err != nil {
 		t.Error(err)
 	}
@@ -93,8 +90,7 @@ func TestScannerEscaped(t *testing.T) {
 }
 
 func TestScannerWithHeader(t *testing.T) {
-	var scanner = csv.NewScanner([]byte(csvWithHeader), csv.Header(true))
-	header, rows, err := scanner.Scan()
+	header, rows, err := csv.Scan([]byte(csvWithHeader), csv.Header(true))
 	if err != nil {
 		t.Error(err)
 	}
@@ -103,9 +99,8 @@ func TestScannerWithHeader(t *testing.T) {
 }
 
 func TestScannerWithCustomSeparator(t *testing.T) {
-	var scanner = csv.NewScanner([]byte(csvWithCustomSeparator),
+	header, rows, err := csv.Scan([]byte(csvWithCustomSeparator),
 		csv.Header(true), csv.Separator('|'))
-	header, rows, err := scanner.Scan()
 	if err != nil {
 		t.Error(err)
 	}
@@ -114,9 +109,8 @@ func TestScannerWithCustomSeparator(t *testing.T) {
 }
 
 func TestScannerWithSingleQuote(t *testing.T) {
-	var scanner = csv.NewScanner([]byte(csvWithSingleQuote),
+	_, rows, err := csv.Scan([]byte(csvWithSingleQuote),
 		csv.AllowSingleQuote(true))
-	_, rows, err := scanner.Scan()
 	if err != nil {
 		t.Error(err)
 	}
@@ -124,8 +118,7 @@ func TestScannerWithSingleQuote(t *testing.T) {
 }
 
 func TestScannerWithComment(t *testing.T) {
-	var scanner = csv.NewScanner([]byte(csvWithComment))
-	_, rows, err := scanner.Scan()
+	_, rows, err := csv.Scan([]byte(csvWithComment))
 	if err != nil {
 		t.Error(err)
 	}
@@ -133,8 +126,7 @@ func TestScannerWithComment(t *testing.T) {
 }
 
 func TestScannerWithCustomComment(t *testing.T) {
-	var scanner = csv.NewScanner([]byte(csvWithCustomComment), csv.Comment('#'))
-	_, rows, err := scanner.Scan()
+	_, rows, err := csv.Scan([]byte(csvWithCustomComment), csv.Comment('#'))
 	if err != nil {
 		t.Error(err)
 	}
@@ -142,9 +134,8 @@ func TestScannerWithCustomComment(t *testing.T) {
 }
 
 func TestScannerWithSpace(t *testing.T) {
-	var scanner = csv.NewScanner([]byte(csvWithSpace),
+	_, rows, err := csv.Scan([]byte(csvWithSpace),
 		csv.OmitLeadingSpace(true), csv.OmitTrailingSpace(true))
-	_, rows, err := scanner.Scan()
 	if err != nil {
 		t.Error(err)
 	}
@@ -152,8 +143,7 @@ func TestScannerWithSpace(t *testing.T) {
 }
 
 func TestScannerWithEmptyField(t *testing.T) {
-	var scanner = csv.NewScanner([]byte(csvWithEmptyField), csv.AllowEmptyField(true))
-	_, rows, err := scanner.Scan()
+	_, rows, err := csv.Scan([]byte(csvWithEmptyField), csv.AllowEmptyField(true))
 	if err != nil {
 		t.Error(err)
 	}

@@ -15,9 +15,18 @@ import (
 	"golang.org/x/text/transform"
 )
 
-// NewScanner creates and returns a new scanner from a byte slice with the given settings.
-func NewScanner(data []byte, settings ...Setting) *Scanner {
-	var s = &Scanner{
+// Scan scans a CSV document and returns the scanned header and rows.
+//
+// If setting Header(true) is set, the header names will be returned.
+//
+// If an error occurs, header and rows will be returned as nil.
+func Scan(data []byte, settings ...Setting) (header []string, rows [][]string, err error) {
+	return newScanner(data, settings...).Scan()
+}
+
+// newScanner creates and returns a new scanner from a byte slice with the given settings.
+func newScanner(data []byte, settings ...Setting) *scanner {
+	var s = &scanner{
 		rule: defaultRule,
 	}
 	for _, setting := range settings {
@@ -28,8 +37,7 @@ func NewScanner(data []byte, settings ...Setting) *Scanner {
 	return s
 }
 
-// A Scanner scans the header and values out of a CSV-like document.
-type Scanner struct {
+type scanner struct {
 	f    *bufio.Reader
 	rule rule
 
@@ -45,12 +53,7 @@ type Scanner struct {
 	rows          [][]string
 }
 
-// Scan scans the document and returns the scanned header and rows.
-//
-// If setting Header(true) is set, the header names will be returned.
-//
-// If an error occurs, header and rows will be returned as nil.
-func (s *Scanner) Scan() (header []string, rows [][]string, err error) {
+func (s *scanner) Scan() (header []string, rows [][]string, err error) {
 	err = s.next()
 	if err != nil {
 		err = s.error(err)
@@ -87,12 +90,12 @@ func (s *Scanner) Scan() (header []string, rows [][]string, err error) {
 }
 
 // error wraps a scanning error with the current position in the CSV document.
-func (s *Scanner) error(err error) error {
+func (s *scanner) error(err error) error {
 	return fmt.Errorf("csv: Scan failed at line %d, pos %d: %v", s.lineNo, s.pos, err)
 }
 
 // next moves to the next rune in the document.
-func (s *Scanner) next() error {
+func (s *scanner) next() error {
 	if s.pos >= len([]rune(s.line))-1 {
 		return s.nextLine()
 	}
@@ -106,7 +109,7 @@ func (s *Scanner) next() error {
 //
 // If the new line is the last line of the document, s.lastLine will be set
 // true. If the last line is empty, s.eof will be set true.
-func (s *Scanner) nextLine() error {
+func (s *scanner) nextLine() error {
 	var err error
 	s.line, err = s.f.ReadString('\n')
 	if err != nil {
@@ -126,14 +129,14 @@ func (s *Scanner) nextLine() error {
 	return nil
 }
 
-func (s *Scanner) scanComment() error {
+func (s *scanner) scanComment() error {
 	// s.c is be the start rune of a comment.
 	// Skip the current line.
 	return s.nextLine()
 }
 
 // scanHeader scans and returns the names in a header.
-func (s *Scanner) scanHeader() ([]string, error) {
+func (s *scanner) scanHeader() ([]string, error) {
 	var header = make([]string, 0)
 
 	name, err := s.scanName()
@@ -162,7 +165,7 @@ func (s *Scanner) scanHeader() ([]string, error) {
 	return header, nil
 }
 
-func (s *Scanner) scanRecord() ([]string, error) {
+func (s *scanner) scanRecord() ([]string, error) {
 	var fields = make([]string, 0)
 	field, err := s.scanField()
 	if err != nil {
@@ -195,7 +198,7 @@ func (s *Scanner) scanRecord() ([]string, error) {
 //
 // If no header name is found, or the end of a header name could not be found,
 // an error will be returned.
-func (s *Scanner) scanName() (string, error) {
+func (s *scanner) scanName() (string, error) {
 	return s.scanField()
 }
 
@@ -206,7 +209,7 @@ func (s *Scanner) scanName() (string, error) {
 // separator or line end is found.
 //
 // If the end of a field could not be found, an error will be returned.
-func (s *Scanner) scanField() (string, error) {
+func (s *scanner) scanField() (string, error) {
 	if s.rule.omitLeadingSpace {
 		_, err := s.scanSPACE()
 		if err != nil {
@@ -236,7 +239,7 @@ func (s *Scanner) scanField() (string, error) {
 	return field, nil
 }
 
-func (s *Scanner) scanEscaped() (string, error) {
+func (s *scanner) scanEscaped() (string, error) {
 	leadingQuote, err := s.scanQUOTE()
 	if err != nil {
 		return "", err
@@ -291,7 +294,7 @@ func (s *Scanner) scanEscaped() (string, error) {
 	return "", fmt.Errorf("trailing quote not found")
 }
 
-func (s *Scanner) scanNonEscaped() (string, error) {
+func (s *scanner) scanNonEscaped() (string, error) {
 	if (s.isComma(s.c) || s.isLineEnd(s.c) || s.eof) && !s.rule.allowEmptyField {
 		return "", fmt.Errorf("unexpected empty field, expect text")
 	}
@@ -314,7 +317,7 @@ func (s *Scanner) scanNonEscaped() (string, error) {
 // with the Separator() setting.
 //
 // If no separator is found, an error will be returned.
-func (s *Scanner) scanCOMMA() (string, error) {
+func (s *scanner) scanCOMMA() (string, error) {
 	if s.c != s.rule.separator {
 		return "", fmt.Errorf("unexpected character '%s', expect %s", string(s.c), string(s.rule.separator))
 	}
@@ -327,7 +330,7 @@ func (s *Scanner) scanCOMMA() (string, error) {
 }
 
 // scanCRLF scans and returns a line end.
-func (s *Scanner) scanCRLF() (string, error) {
+func (s *scanner) scanCRLF() (string, error) {
 	if !s.isLineEnd(s.c) {
 		return "", fmt.Errorf("unexpected character '%s', expect line end", string(s.c))
 	}
@@ -341,7 +344,7 @@ func (s *Scanner) scanCRLF() (string, error) {
 
 // scanQUOTE scans and returns a quote. By default, both double and single quote
 // are allowed. This can be changed with the AllowSingleQuote() setting.
-func (s *Scanner) scanQUOTE() (string, error) {
+func (s *scanner) scanQUOTE() (string, error) {
 	if !s.isQuote(s.c) {
 		return "", fmt.Errorf("unexpected character '%s', expect quote", string(s.c))
 	}
@@ -354,7 +357,7 @@ func (s *Scanner) scanQUOTE() (string, error) {
 }
 
 // scanSPACE scans while the current rune is a space.
-func (s *Scanner) scanSPACE() (string, error) {
+func (s *scanner) scanSPACE() (string, error) {
 	var spaces string
 	for !s.eof && s.isSpace(s.c) {
 		spaces += string(s.c)
@@ -366,7 +369,7 @@ func (s *Scanner) scanSPACE() (string, error) {
 	return spaces, nil
 }
 
-func (s *Scanner) isQuote(c rune) bool {
+func (s *scanner) isQuote(c rune) bool {
 	if c == '"' {
 		return true
 	}
@@ -376,15 +379,15 @@ func (s *Scanner) isQuote(c rune) bool {
 	return false
 }
 
-func (s *Scanner) isLineEnd(c rune) bool {
+func (s *scanner) isLineEnd(c rune) bool {
 	return c == '\n'
 }
 
-func (s *Scanner) isComma(c rune) bool {
+func (s *scanner) isComma(c rune) bool {
 	return c == s.rule.separator
 }
 
-func (s *Scanner) isSpace(c rune) bool {
+func (s *scanner) isSpace(c rune) bool {
 	switch c {
 	case '\t', '\v', '\f', ' ', 0x85, 0xA0:
 		return true
