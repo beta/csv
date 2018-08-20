@@ -51,12 +51,6 @@ TBD.
 
 All scanner settings can be used in an unmarshaler. Also, all generator settings can be used in an marshaler.
 
-To use a setting, pass it to the target `New...` function. For example:
-
-```go
-var scanner = csv.NewScanner(..., csv.AllowEmptyField(true), csv.Header(true))
-```
-
 Beside the settings above, there's a special setting named `RFC4180` which applies the requirements as described in [RFC 4180](https://tools.ietf.org/html/rfc4180), including
 
 - not allowing single quotes,
