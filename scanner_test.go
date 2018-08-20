@@ -125,7 +125,7 @@ func TestScannerEscaped(t *testing.T) {
 }
 
 func TestScannerWithHeader(t *testing.T) {
-	s, err := csv.NewScanner([]byte(csvWithHeader), csv.Header(true))
+	s, err := csv.NewScanner([]byte(csvWithHeader))
 	if err != nil {
 		t.Error(err)
 		return
