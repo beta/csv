@@ -53,7 +53,7 @@ type Scanner struct {
 func (s *Scanner) Scan() (header []string, rows [][]string, err error) {
 	err = s.next()
 	if err != nil {
-		err = fmt.Errorf("line %d, pos %d: %v", s.lineNo, s.pos, err)
+		err = s.error(err)
 		return
 	}
 
@@ -68,7 +68,7 @@ func (s *Scanner) Scan() (header []string, rows [][]string, err error) {
 			var row []string
 			row, err = s.scanRecord()
 			if err != nil {
-				err = fmt.Errorf("line %d, pos %d: %v", s.lineNo, s.pos, err)
+				err = s.error(err)
 				return
 			}
 			if s.rows == nil {
@@ -77,13 +77,18 @@ func (s *Scanner) Scan() (header []string, rows [][]string, err error) {
 			s.rows = append(s.rows, row)
 		}
 		if err != nil {
-			err = fmt.Errorf("line %d, pos %d: %v", s.lineNo, s.pos, err)
+			err = s.error(err)
 			return
 		}
 	}
 	header = s.header
 	rows = s.rows
 	return
+}
+
+// error wraps a scanning error with the current position in the CSV document.
+func (s *Scanner) error(err error) error {
+	return fmt.Errorf("csv: Scan failed at line %d, pos %d: %v", s.lineNo, s.pos, err)
 }
 
 // next moves to the next rune in the document.
