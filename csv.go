@@ -230,5 +230,11 @@ func RFC4180() Setting {
 		r.omitLeadingSpace = false
 		r.omitTrailingSpace = false
 		r.comment = noRune
+
+		// Unmarshaler and marshaler common settings.
+		r.headerPrefix = noRune
+		r.headerSuffix = noRune
+		r.fieldPrefix = noRune
+		r.fieldSuffix = noRune
 	}
 }
