@@ -45,6 +45,15 @@ TBD.
 | `OmitTrailingSpace(bool)` | Sets whether the trailing spaces of fields should be omitted while scanning a document. | `true`  |
 | `Comment(rune)`           | Sets the leading rune of comments used while scanning a document.                       |         |
 
+### Unmarshaler and marshaler settings
+
+| Setting              | Description                                                                                                                                                                                                                     | Default |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `HeaderPrefix(rune)` | Sets the prefix rune of header names while unmarshaling and marshaling a document. If a header prefix is set, the `Prefix` setting will be ignored while reading and writing the header row, but will still be used for fields. |         |
+| `HeaderSuffix(rune)` | Sets the suffix rune of header names while unmarshaling and marshaling a document. If a header suffix is set, the `Suffix` setting will be ignored while reading and writing the header row, but will still be used for fields. |         |
+| `FieldPrefix(rune)`  | Sets the suffix rune of fields while unmarshaling and marshaling a document. If a field prefix is set, the `Prefix` setting will be ignored while reading and writing fields, but will still be used for the header.            |         |
+| `FieldSuffix(rune)`  | Sets the suffix rune of fields while unmarshaling and marshaling a document. If a field suffix is set, the `Suffix` setting will be ignored while reading and writing fields, but will still be used for the header.            |         |
+
 ### Unmarshaler settings
 
 | Setting                                     | Description                                                                             | Default |
