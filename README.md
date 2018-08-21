@@ -51,7 +51,7 @@ TBD.
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `HeaderPrefix(rune)` | Sets the prefix rune of header names while unmarshaling and marshaling a document.<br>If a header prefix is set, the `Prefix` setting will be ignored while reading and writing the header row, but will still be used for fields. |         |
 | `HeaderSuffix(rune)` | Sets the suffix rune of header names while unmarshaling and marshaling a document.<br>If a header suffix is set, the `Suffix` setting will be ignored while reading and writing the header row, but will still be used for fields. |         |
-| `FieldPrefix(rune)`  | Sets the suffix rune of fields while unmarshaling and marshaling a document.<br>If a field prefix is set, the `Prefix` setting will be ignored while reading and writing fields, but will still be used for the header.            |         |
+| `FieldPrefix(rune)`  | Sets the prefix rune of fields while unmarshaling and marshaling a document.<br>If a field prefix is set, the `Prefix` setting will be ignored while reading and writing fields, but will still be used for the header.            |         |
 | `FieldSuffix(rune)`  | Sets the suffix rune of fields while unmarshaling and marshaling a document.<br>If a field suffix is set, the `Suffix` setting will be ignored while reading and writing fields, but will still be used for the header.            |         |
 
 ### Unmarshaler settings
