@@ -24,7 +24,34 @@ TBD.
 
 ## Settings
 
-`csv` uses setting functions for customization. Below lists the settings supported by `csv`.
+`csv` uses setting functions for customization. The default setting used by `csv` supports a flexible variation of the standard CSV format.
+
+- The default encoding is UTF-8.
+- `,` is used as the default separator.
+- Single quotes are allowed. Escaping works exactly the same as double quotes.
+
+  `"field 1",'field 2','field 3 ''escaped''','field "4"'`
+
+  will be parsed as
+
+  `["field 1", "field 2", "field 3 'escaped'", "field \"4\""]`
+- Empty fields are allowed.
+
+  `field 1,,field 3`
+
+  will be parsed as
+
+  `["field 1", "", "field 3"]`
+- Leading and trailing spaces in fields will be ignored.
+
+  `field 1  , field 2`
+
+  will be parsed as
+
+  `["field 1", "field 2"]`
+- The marshaler by default outputs the header row based on the `csv` tag of struct fields.
+
+Below lists all the settings that can be used to customize the behavior of `csv`.
 
 ### Common settings
 
