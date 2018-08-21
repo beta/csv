@@ -21,6 +21,9 @@ Mary,Jane,23,false,9876543210`
 John,Smith,25,true,12345`
 	invalidAgeCalendarCSV = `first_name,last_name,age,married,phone
 John,Smith,0,true,1234567890`
+	calendarCSVWithPrefixAndSuffix = `[first_name],[last_name],[age],[married],[phone]
+(John),(Smith),(25),(true),(1234567890)
+(Mary),(Jane),(23),(false),(9876543210)`
 )
 
 type Person struct {
@@ -102,6 +105,31 @@ func TestUnmarshalWithValidator(t *testing.T) {
 		}
 		t.Error(err)
 	}
+}
+
+func TestUnmarshalWithPrefixAndSuffix(t *testing.T) {
+	var persons []*Person
+	var err = csv.Unmarshal([]byte(calendarCSVWithPrefixAndSuffix), &persons,
+		csv.Prefix('('), csv.Suffix(')'), // Ignored for header, valid for fields.
+		csv.HeaderPrefix('['), csv.HeaderSuffix(']'))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	printPersons(t, persons)
+}
+
+func TestUnmarshalWithOverridenPrefixAndSuffix(t *testing.T) {
+	var persons []*Person
+	var err = csv.Unmarshal([]byte(calendarCSVWithPrefixAndSuffix), &persons,
+		csv.Prefix('{'), csv.Suffix('}'), // Overriden.
+		csv.HeaderPrefix('['), csv.HeaderSuffix(']'),
+		csv.FieldPrefix('('), csv.FieldSuffix(')'))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	printPersons(t, persons)
 }
 
 func printPersons(t *testing.T, persons []*Person) {

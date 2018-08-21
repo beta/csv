@@ -14,25 +14,6 @@ import (
 	"strings"
 )
 
-//==============================================================================
-// Unmarshaler settings.
-//==============================================================================
-
-// Validator adds a new validator functions for validating a CSV value while
-// unmarshaling a document.
-func Validator(name string, validator func(interface{}) bool) Setting {
-	return func(r *rule) {
-		if r.validators == nil {
-			r.validators = make(map[string]func(interface{}) bool)
-		}
-		r.validators[name] = validator
-	}
-}
-
-//==============================================================================
-// Unmarshaler.
-//==============================================================================
-
 const csvTagName = "csv"
 
 // Unmarshal parses a CSV document and stores the result in the struct slice
@@ -121,9 +102,26 @@ func (u *unmarshaler) unmarshal() error {
 		return err
 	}
 
+	var originalPrefix = s.rule.prefix
+	var originalSuffix = s.rule.suffix
+	if u.rule.headerPrefix != noRune {
+		s.rule.prefix = u.rule.headerPrefix
+	}
+	if u.rule.headerSuffix != noRune {
+		s.rule.suffix = u.rule.headerSuffix
+	}
 	header, err := s.Scan()
 	if err != nil {
 		return err
+	}
+	s.rule.prefix = originalPrefix
+	s.rule.suffix = originalSuffix
+
+	if u.rule.fieldPrefix != noRune {
+		s.rule.prefix = u.rule.fieldPrefix
+	}
+	if u.rule.fieldSuffix != noRune {
+		s.rule.suffix = u.rule.fieldSuffix
 	}
 	rows, err := s.ScanAll()
 	if err != nil {

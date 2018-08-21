@@ -27,6 +27,12 @@ type rule struct {
 	omitTrailingSpace bool
 	comment           rune
 
+	// Unmarshaler and marshaler common rules.
+	headerPrefix rune
+	headerSuffix rune
+	fieldPrefix  rune
+	fieldSuffix  rune
+
 	// Unmarshaler rules.
 	validators map[string]func(interface{}) bool
 
@@ -47,6 +53,12 @@ var defaultRule = rule{
 	omitLeadingSpace:  true,
 	omitTrailingSpace: true,
 	comment:           noRune,
+
+	// Unmarshaler and marshaler common rules.
+	headerPrefix: noRune,
+	headerSuffix: noRune,
+	fieldPrefix:  noRune,
+	fieldSuffix:  noRune,
 
 	// Unmarshaler rules.
 	validators: nil,
@@ -87,6 +99,119 @@ func Prefix(prefix rune) Setting {
 func Suffix(suffix rune) Setting {
 	return func(r *rule) {
 		r.suffix = suffix
+	}
+}
+
+//==============================================================================
+// Scanner settings.
+//==============================================================================
+
+// AllowSingleQuote sets whether single quotes are allowed while reading a document.
+func AllowSingleQuote(v bool) Setting {
+	return func(r *rule) {
+		r.allowSingleQuote = v
+	}
+}
+
+// AllowEmptyField sets whether empty fields are allowed while reading a document.
+func AllowEmptyField(v bool) Setting {
+	return func(r *rule) {
+		r.allowEmptyField = v
+	}
+}
+
+// OmitLeadingSpace sets whether the leading spaces of fields should be omitted while reading a document.
+func OmitLeadingSpace(v bool) Setting {
+	return func(r *rule) {
+		r.omitLeadingSpace = v
+	}
+}
+
+// OmitTrailingSpace sets whether the trailing spaces of fields should be omitted while reading a document.
+func OmitTrailingSpace(v bool) Setting {
+	return func(r *rule) {
+		r.omitTrailingSpace = v
+	}
+}
+
+// Comment sets the leading rune of comments used while reading a document.
+func Comment(comment rune) Setting {
+	return func(r *rule) {
+		r.comment = comment
+	}
+}
+
+//==============================================================================
+// Unmarshaler and marshaler common settings.
+//==============================================================================
+
+// HeaderPrefix sets the prefix rune of header names while unmarshaling and
+// marshaling a document.
+//
+// If a header prefix is set, the Prefix setting will be ignored while reading
+// and writing the header row, but will still be used for fields.
+func HeaderPrefix(prefix rune) Setting {
+	return func(r *rule) {
+		r.headerPrefix = prefix
+	}
+}
+
+// HeaderSuffix sets the suffix rune of header names while unmarshaling and
+// marshaling a document.
+//
+// If a header suffix is set, the Suffix setting will be ignored while reading
+// and writing the header row, but will still be used for fields.
+func HeaderSuffix(suffix rune) Setting {
+	return func(r *rule) {
+		r.headerSuffix = suffix
+	}
+}
+
+// FieldPrefix sets the prefix rune of fields while unmarshaling and marshaling
+// a document.
+//
+// If a field prefix is set, the Prefix setting will be ignored while reading
+// and writing fields, but will still be used for the header.
+func FieldPrefix(prefix rune) Setting {
+	return func(r *rule) {
+		r.fieldPrefix = prefix
+	}
+}
+
+// FieldSuffix sets the suffix rune of fields while unmarshaling and marshaling
+// a document.
+//
+// If a field suffix is set, the Suffix setting will be ignored while reading
+// and writing fields, but will still be used for the header.
+func FieldSuffix(suffix rune) Setting {
+	return func(r *rule) {
+		r.fieldSuffix = suffix
+	}
+}
+
+//==============================================================================
+// Unmarshaler settings.
+//==============================================================================
+
+// Validator adds a new validator functions for validating a CSV value while
+// unmarshaling a document.
+func Validator(name string, validator func(interface{}) bool) Setting {
+	return func(r *rule) {
+		if r.validators == nil {
+			r.validators = make(map[string]func(interface{}) bool)
+		}
+		r.validators[name] = validator
+	}
+}
+
+//==============================================================================
+// Marshaler settings.
+//==============================================================================
+
+// WriteHeader sets whether to output the header row while writing the document.
+func WriteHeader(v bool) Setting {
+	return func(r *rule) {
+		r.writeHeader = v
 	}
 }
 

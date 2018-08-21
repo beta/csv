@@ -15,49 +15,6 @@ import (
 	"golang.org/x/text/transform"
 )
 
-//==============================================================================
-// Scanner settings.
-//==============================================================================
-
-// AllowSingleQuote sets whether single quotes are allowed while reading a document.
-func AllowSingleQuote(v bool) Setting {
-	return func(r *rule) {
-		r.allowSingleQuote = v
-	}
-}
-
-// AllowEmptyField sets whether empty fields are allowed while reading a document.
-func AllowEmptyField(v bool) Setting {
-	return func(r *rule) {
-		r.allowEmptyField = v
-	}
-}
-
-// OmitLeadingSpace sets whether the leading spaces of fields should be omitted while reading a document.
-func OmitLeadingSpace(v bool) Setting {
-	return func(r *rule) {
-		r.omitLeadingSpace = v
-	}
-}
-
-// OmitTrailingSpace sets whether the trailing spaces of fields should be omitted while reading a document.
-func OmitTrailingSpace(v bool) Setting {
-	return func(r *rule) {
-		r.omitTrailingSpace = v
-	}
-}
-
-// Comment sets the leading rune of comments used while reading a document.
-func Comment(comment rune) Setting {
-	return func(r *rule) {
-		r.comment = comment
-	}
-}
-
-//==============================================================================
-// Scanner.
-//==============================================================================
-
 // NewScanner creates and returns a new scanner from a byte slice with the given settings.
 func NewScanner(data []byte, settings ...Setting) (*Scanner, error) {
 	var s = &Scanner{
