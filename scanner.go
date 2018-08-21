@@ -67,7 +67,7 @@ func (s *Scanner) Scan() (row []string, err error) {
 		for s.c == s.rule.comment {
 			err = s.scanComment()
 			if err != nil {
-				return nil, err
+				return nil, s.error(err)
 			}
 		}
 	}
@@ -92,7 +92,7 @@ func (s *Scanner) ScanAll() (rows [][]string, err error) {
 		var row []string
 		row, err = s.Scan()
 		if err != nil {
-			return nil, err
+			return nil, s.error(err)
 		}
 		rows = append(rows, row)
 	}
@@ -101,7 +101,7 @@ func (s *Scanner) ScanAll() (rows [][]string, err error) {
 
 // error wraps a scanning error with the current position in the CSV document.
 func (s *Scanner) error(err error) error {
-	return fmt.Errorf("csv: Scan failed at line %d, pos %d: %v", s.lineNo, s.pos, err)
+	return fmt.Errorf("csv: Scanner failed at line %d, pos %d: %v", s.lineNo, s.pos, err)
 }
 
 // next moves to the next rune in the document.
