@@ -62,23 +62,12 @@ func (s *Scanner) Scan() (row []string, err error) {
 		return nil, io.EOF
 	}
 
-	// Scan comments.
-	if s.rule.comment != noRune {
-		for s.c == s.rule.comment {
-			err = s.scanComment()
-			if err != nil {
-				return nil, s.error(err)
-			}
-		}
-	}
-
-	if s.eof {
-		return nil, io.EOF
-	}
-
 	row, err = s.scanRecord()
 	if err != nil {
 		return nil, s.error(err)
+	}
+	if s.eof {
+		err = io.EOF
 	}
 	return
 }
@@ -89,8 +78,7 @@ func (s *Scanner) Scan() (row []string, err error) {
 func (s *Scanner) ScanAll() (rows [][]string, err error) {
 	rows = make([][]string, 0)
 	for !s.eof {
-		var row []string
-		row, err = s.Scan()
+		row, err := s.scanRecord()
 		if err != nil {
 			return nil, s.error(err)
 		}
@@ -120,6 +108,47 @@ func (s *Scanner) next() error {
 // If the new line is the last line of the document, s.lastLine will be set
 // true. If the last line is empty, s.eof will be set true.
 func (s *Scanner) nextLine() error {
+	s.lineNo++
+	var err = s.readNextLine()
+	if err != nil {
+		return err
+	}
+
+	// Omit comments and empty lines if necessary.
+	for !s.lastLine && s.shouldOmitLine(s.line) {
+		s.lineNo++
+		err = s.readNextLine()
+		if err != nil {
+			return err
+		}
+	}
+
+	s.pos = 0
+	if len([]rune(s.line)) <= 0 && s.lastLine {
+		s.eof = true
+		s.c = noRune
+		if !s.rule.allowEndingLineBreakInLastRecord {
+			return fmt.Errorf("unexpected empty line")
+		}
+		return nil
+	}
+	s.c = []rune(s.line)[0]
+	return nil
+}
+
+func (s *Scanner) shouldOmitLine(line string) bool {
+	// Empty line (only with a line break).
+	if line == "\n" && s.rule.omitEmptyLine {
+		return true
+	}
+	// Comment.
+	if s.rule.comment != noRune && len([]rune(line)) > 0 && []rune(line)[0] == s.rule.comment {
+		return true
+	}
+	return false
+}
+
+func (s *Scanner) readNextLine() error {
 	var err error
 	s.line, err = s.f.ReadString('\n')
 	if err != nil {
@@ -129,20 +158,7 @@ func (s *Scanner) nextLine() error {
 			return err
 		}
 	}
-	if len([]rune(s.line)) <= 0 {
-		s.eof = true
-		return nil
-	}
-	s.lineNo++
-	s.pos = 0
-	s.c = []rune(s.line)[0]
 	return nil
-}
-
-func (s *Scanner) scanComment() error {
-	// s.c is be the start rune of a comment.
-	// Skip the current line.
-	return s.nextLine()
 }
 
 func (s *Scanner) scanRecord() ([]string, error) {

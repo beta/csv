@@ -21,11 +21,13 @@ type rule struct {
 	suffix    rune
 
 	// Scanner rules.
-	allowSingleQuote  bool
-	allowEmptyField   bool
-	omitLeadingSpace  bool
-	omitTrailingSpace bool
-	comment           rune
+	allowSingleQuote                 bool
+	allowEmptyField                  bool
+	allowEndingLineBreakInLastRecord bool
+	omitLeadingSpace                 bool
+	omitTrailingSpace                bool
+	omitEmptyLine                    bool
+	comment                          rune
 
 	// Unmarshaler and marshaler common rules.
 	headerPrefix rune
@@ -48,11 +50,13 @@ var defaultRule = rule{
 	suffix:    noRune,
 
 	// Scanner rules.
-	allowSingleQuote:  true,
-	allowEmptyField:   true,
-	omitLeadingSpace:  true,
-	omitTrailingSpace: true,
-	comment:           noRune,
+	allowSingleQuote:                 true,
+	allowEmptyField:                  true,
+	allowEndingLineBreakInLastRecord: true,
+	omitLeadingSpace:                 true,
+	omitTrailingSpace:                true,
+	omitEmptyLine:                    true,
+	comment:                          noRune,
 
 	// Unmarshaler and marshaler common rules.
 	headerPrefix: noRune,
@@ -120,17 +124,34 @@ func AllowEmptyField(v bool) Setting {
 	}
 }
 
-// OmitLeadingSpace sets whether the leading spaces of fields should be omitted while reading a document.
+// AllowEndingLineBreakInLastRecord sets whether the last record may have an
+// ending line break while reading a document.
+func AllowEndingLineBreakInLastRecord(v bool) Setting {
+	return func(r *rule) {
+		r.allowEndingLineBreakInLastRecord = v
+	}
+}
+
+// OmitLeadingSpace sets whether the leading spaces of fields should be omitted
+// while reading a document.
 func OmitLeadingSpace(v bool) Setting {
 	return func(r *rule) {
 		r.omitLeadingSpace = v
 	}
 }
 
-// OmitTrailingSpace sets whether the trailing spaces of fields should be omitted while reading a document.
+// OmitTrailingSpace sets whether the trailing spaces of fields should be
+// omitted while reading a document.
 func OmitTrailingSpace(v bool) Setting {
 	return func(r *rule) {
 		r.omitTrailingSpace = v
+	}
+}
+
+// OmitEmptyLine sets whether empty lines should be omitted while reading a document.
+func OmitEmptyLine(v bool) Setting {
+	return func(r *rule) {
+		r.omitEmptyLine = v
 	}
 }
 
@@ -227,8 +248,10 @@ func RFC4180() Setting {
 		// Scanner rules.
 		r.allowSingleQuote = false
 		r.allowEmptyField = false
+		r.allowEndingLineBreakInLastRecord = true
 		r.omitLeadingSpace = false
 		r.omitTrailingSpace = false
+		r.omitEmptyLine = false
 		r.comment = noRune
 
 		// Unmarshaler and marshaler common settings.

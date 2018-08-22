@@ -22,7 +22,7 @@ This package aims to offer better customizability than the built-in `csv` packag
 
 TBD.
 
-## Settings
+## Customization
 
 `csv` uses setting functions for customization. The default setting used by `csv` supports a flexible variation of the standard CSV format.
 
@@ -42,6 +42,7 @@ TBD.
   will be parsed as
 
   `["field 1", "", "field 3"]`
+- An ending line break in the last record is allowed.
 - Leading and trailing spaces in fields will be ignored.
 
   `field 1  , field 2`
@@ -49,6 +50,7 @@ TBD.
   will be parsed as
 
   `["field 1", "field 2"]`
+- Empty lines are omitted.
 - The marshaler by default outputs the header row based on the `csv` tag of struct fields.
 
 Below lists all the settings that can be used to customize the behavior of `csv`.
@@ -64,13 +66,15 @@ Below lists all the settings that can be used to customize the behavior of `csv`
 
 ### Scanner settings
 
-| Setting                   | Description                                                                             | Default |
-| ------------------------- | --------------------------------------------------------------------------------------- | ------- |
-| `AllowSingleQuote(bool)`  | Sets whether single quotes are allowed while scanning a document.                       | `true`  |
-| `AllowEmptyField(bool)`   | Sets whether empty fields are allowed while scanning a document.                        | `true`  |
-| `OmitLeadingSpace(bool)`  | Sets whether the leading spaces of fields should be omitted while scanning a document.  | `true`  |
-| `OmitTrailingSpace(bool)` | Sets whether the trailing spaces of fields should be omitted while scanning a document. | `true`  |
-| `Comment(rune)`           | Sets the leading rune of comments used while scanning a document.                       |         |
+| Setting                                  | Description                                                                             | Default |
+| ---------------------------------------- | --------------------------------------------------------------------------------------- | ------- |
+| `AllowSingleQuote(bool)`                 | Sets whether single quotes are allowed while scanning a document.                       | `true`  |
+| `AllowEmptyField(bool)`                  | Sets whether empty fields are allowed while scanning a document.                        | `true`  |
+| `AllowEndingLineBreakInLastRecord(bool)` | Sets whether the last record may have an ending line break while reading a document.    | `true`  |
+| `OmitLeadingSpace(bool)`                 | Sets whether the leading spaces of fields should be omitted while scanning a document.  | `true`  |
+| `OmitTrailingSpace(bool)`                | Sets whether the trailing spaces of fields should be omitted while scanning a document. | `true`  |
+| `OmitEmptyLine(bool)`                    | Sets whether empty lines should be omitted while reading a document.                    | `true`  |
+| `Comment(rune)`                          | Sets the leading rune of comments used while scanning a document.                       |         |
 
 ### Unmarshaler and marshaler settings
 
@@ -101,7 +105,9 @@ Beside the settings above, there's a special setting named `RFC4180` which appli
 - no prefix and suffix,
 - not allowing single quotes,
 - not allowing empty fields,
-- not omitting leading and trailing spaces, and
+- allowing an ending line break in the last record,
+- not omitting leading and trailing spaces,
+- not omitting empty lines, and
 - not allowing comments.
 
 ## License

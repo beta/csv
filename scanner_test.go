@@ -65,6 +65,21 @@ const csvWithPrefixAndSuffix = `[Col A],[Col B],[Col C]
 (aaa),("b
 bb"),("ccc")`
 
+const csvWithEmptyLines = `aaa,bbb,ccc
+
+"aaa",bbb,"ccc"
+
+
+aaa,"b
+bb","ccc"
+`
+
+const csvWithEndingLineBreakInLastRecord = `aaa,bbb,ccc
+"aaa",bbb,"ccc"
+aaa,"b
+bb","ccc"
+`
+
 func TestScanner(t *testing.T) {
 	s, err := csv.NewScanner([]byte(csvStandard))
 	if err != nil {
@@ -241,6 +256,40 @@ func TestScannerWithPrefixAndSuffix(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 		return
+	}
+	printRows(t, rows)
+}
+
+func TestScannerWithEmptyLines(t *testing.T) {
+	s, err := csv.NewScanner([]byte(csvWithEmptyLines), csv.OmitEmptyLine(true))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	rows, err := s.ScanAll()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if len(rows) != 3 {
+		t.Errorf("row count is wrong, expect %d, get %d", 3, len(rows))
+	}
+	printRows(t, rows)
+}
+
+func TestScannerWithEndingLineBreakInLastRecord(t *testing.T) {
+	s, err := csv.NewScanner([]byte(csvWithEndingLineBreakInLastRecord), csv.AllowEndingLineBreakInLastRecord(true))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	rows, err := s.ScanAll()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if len(rows) != 3 {
+		t.Errorf("row count is wrong, expect %d, get %d", 3, len(rows))
 	}
 	printRows(t, rows)
 }
