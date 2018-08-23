@@ -80,6 +80,11 @@ aaa,"b
 bb","ccc"
 `
 
+const csvWithBOM = "\xEF\xBB\xBF" + `aaa,bbb,ccc
+"aaa",bbb,"ccc"
+aaa,"b
+bb","ccc"`
+
 func TestScanner(t *testing.T) {
 	s, err := csv.NewScanner([]byte(csvStandard))
 	if err != nil {
@@ -290,6 +295,24 @@ func TestScannerWithEndingLineBreakInLastRecord(t *testing.T) {
 	}
 	if len(rows) != 3 {
 		t.Errorf("row count is wrong, expect %d, get %d", 3, len(rows))
+	}
+	printRows(t, rows)
+}
+
+func TestScannerWithBOM(t *testing.T) {
+	s, err := csv.NewScanner([]byte(csvWithBOM), csv.IgnoreBOM(true))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	rows, err := s.ScanAll()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if rows[0][0] != "aaa" {
+		t.Errorf("BOM is not ignored")
+		return
 	}
 	printRows(t, rows)
 }

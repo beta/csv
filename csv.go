@@ -28,6 +28,7 @@ type rule struct {
 	omitTrailingSpace                bool
 	omitEmptyLine                    bool
 	comment                          rune
+	ignoreBOM                        bool
 
 	// Unmarshaler and marshaler common rules.
 	headerPrefix rune
@@ -57,6 +58,7 @@ var defaultRule = rule{
 	omitTrailingSpace:                true,
 	omitEmptyLine:                    true,
 	comment:                          noRune,
+	ignoreBOM:                        true,
 
 	// Unmarshaler and marshaler common rules.
 	headerPrefix: noRune,
@@ -159,6 +161,17 @@ func OmitEmptyLine(v bool) Setting {
 func Comment(comment rune) Setting {
 	return func(r *rule) {
 		r.comment = comment
+	}
+}
+
+// IgnoreBOM sets whether the leading BOM (byte order mark) should be ignored
+// while reading a document. If not, the BOM will be treated as normal content.
+//
+// This should not be done by a csv package, but since Golang has no built-in
+// support for BOM, a workaround is required.
+func IgnoreBOM(v bool) Setting {
+	return func(r *rule) {
+		r.ignoreBOM = v
 	}
 }
 

@@ -15,6 +15,12 @@ import (
 	"golang.org/x/text/transform"
 )
 
+const (
+	bom0 = 0xEF
+	bom1 = 0xBB
+	bom2 = 0xBF
+)
+
 // NewScanner creates and returns a new scanner from a byte slice with the given settings.
 func NewScanner(data []byte, settings ...Setting) (*Scanner, error) {
 	var s = &Scanner{
@@ -25,6 +31,9 @@ func NewScanner(data []byte, settings ...Setting) (*Scanner, error) {
 	}
 
 	s.f = bufio.NewReader(transform.NewReader(bytes.NewReader(data), s.rule.encoding.NewDecoder()))
+	if s.rule.ignoreBOM {
+		s.ignoreBOM()
+	}
 	var err = s.next()
 	if err != nil {
 		return nil, err
@@ -414,4 +423,17 @@ func (s *Scanner) isSpace(c rune) bool {
 		return true
 	}
 	return false
+}
+
+// Ignores the BOM (byte order mark) at the beginning of document, and set pos
+// to the last byte of
+func (s *Scanner) ignoreBOM() error {
+	b, err := s.f.Peek(3)
+	if err != nil {
+		return err
+	}
+	if b[0] == bom0 && b[1] == bom1 && b[2] == bom2 {
+		return s.next()
+	}
+	return nil
 }
