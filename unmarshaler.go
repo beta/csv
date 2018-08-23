@@ -56,6 +56,13 @@ type unmarshaler struct {
 	fieldMap map[string]*field // Key is the CSV header name of the field.
 }
 
+func (u *unmarshaler) error(err error) error {
+	if !(strings.Index(err.Error(), "csv: ") == 0) {
+		return fmt.Errorf("csv: %v", err)
+	}
+	return err
+}
+
 func (u *unmarshaler) prepareFields() {
 	// u.dest is a pointer to struct pointer slice.
 	var structType = reflect.TypeOf(u.dest).Elem().Elem().Elem()
@@ -99,7 +106,7 @@ func (u *unmarshaler) unmarshal() error {
 
 	s, err := NewScanner(u.data, u.settings...)
 	if err != nil {
-		return err
+		return u.error(err)
 	}
 
 	var originalPrefix = s.rule.prefix
@@ -112,7 +119,7 @@ func (u *unmarshaler) unmarshal() error {
 	}
 	header, err := s.Scan()
 	if err != nil {
-		return err
+		return u.error(err)
 	}
 	s.rule.prefix = originalPrefix
 	s.rule.suffix = originalSuffix
@@ -125,7 +132,7 @@ func (u *unmarshaler) unmarshal() error {
 	}
 	rows, err := s.ScanAll()
 	if err != nil {
-		return err
+		return u.error(err)
 	}
 
 	var sliceV = reflect.ValueOf(u.dest).Elem() // u.dest is a pointer to struct pointer slice.
@@ -149,7 +156,7 @@ func (u *unmarshaler) unmarshal() error {
 		sliceV.Index(rowIndex).Set(obj)
 		err = u.unmarshalRecord(sliceV.Index(rowIndex), header, row)
 		if err != nil {
-			return err
+			return u.error(err)
 		}
 	}
 
@@ -177,10 +184,10 @@ func (u *unmarshaler) unmarshalField(field *field, dest reflect.Value, value str
 	for _, validatorName := range field.ValidatorNames {
 		validator, exist := u.rule.validators[validatorName]
 		if !exist {
-			return fmt.Errorf("csv: cannot find validator %s", validatorName)
+			return fmt.Errorf("cannot find validator %s", validatorName)
 		}
 		if !validator(value) {
-			return fmt.Errorf("csv: invalid value %s for field %s", value, field.Name)
+			return fmt.Errorf("invalid value %s for field %s", value, field.Name)
 		}
 	}
 
@@ -207,7 +214,7 @@ func (u *unmarshaler) unmarshalField(field *field, dest reflect.Value, value str
 	case reflect.String:
 		return u.unmarshalString(dest, value)
 	}
-	return fmt.Errorf("csv: unsupported Go type %s", dest.Type().String())
+	return fmt.Errorf("unsupported Go type %s", dest.Type().String())
 }
 
 func (u *unmarshaler) unmarshalInt(dest reflect.Value, value string) error {
@@ -247,7 +254,7 @@ func (u *unmarshaler) unmarshalInt(dest reflect.Value, value string) error {
 	}
 
 	if outOfRange {
-		return fmt.Errorf("csv: value %s is out of range for type %s", value, dest.Type().String())
+		return fmt.Errorf("value %s is out of range for type %s", value, dest.Type().String())
 	}
 	if !unsigned {
 		dest.SetInt(intVal)
@@ -283,7 +290,7 @@ func (u *unmarshaler) unmarshalFloat(dest reflect.Value, value string) error {
 	}
 
 	if outOfRange {
-		return fmt.Errorf("csv: value %s is out of range for type %s", value, dest.Type().String())
+		return fmt.Errorf("value %s is out of range for type %s", value, dest.Type().String())
 	}
 	dest.SetFloat(floatVal)
 	return nil
@@ -294,7 +301,7 @@ func (u *unmarshaler) unmarshalString(dest reflect.Value, value string) error {
 	return nil
 }
 
-// An InvalidUnmarshalError describes an invalid argument passed to Unamrshal.
+// An InvalidUnmarshalError describes an invalid argument passed to Unmarshal.
 // (The argument to Unmarshal must be a non-nil pointer.)
 type InvalidUnmarshalError struct {
 	Type reflect.Type

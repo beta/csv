@@ -74,7 +74,7 @@ func TestUnmarshalCustomType(t *testing.T) {
 	var persons []*Person
 	var err = csv.Unmarshal([]byte(invalidPhoneCalendarCSV), &persons)
 	if err != nil {
-		if err.Error() == "12345 is not a valid phone number" {
+		if strings.Contains(err.Error(), "is not a valid phone number") {
 			t.Log(err)
 			return
 		}
