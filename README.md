@@ -66,15 +66,16 @@ Below lists all the settings that can be used to customize the behavior of `csv`
 
 ### Scanner settings
 
-| Setting                                  | Description                                                                             | Default |
-| ---------------------------------------- | --------------------------------------------------------------------------------------- | ------- |
-| `AllowSingleQuote(bool)`                 | Sets whether single quotes are allowed while scanning a document.                       | `true`  |
-| `AllowEmptyField(bool)`                  | Sets whether empty fields are allowed while scanning a document.                        | `true`  |
-| `AllowEndingLineBreakInLastRecord(bool)` | Sets whether the last record may have an ending line break while reading a document.    | `true`  |
-| `OmitLeadingSpace(bool)`                 | Sets whether the leading spaces of fields should be omitted while scanning a document.  | `true`  |
-| `OmitTrailingSpace(bool)`                | Sets whether the trailing spaces of fields should be omitted while scanning a document. | `true`  |
-| `OmitEmptyLine(bool)`                    | Sets whether empty lines should be omitted while reading a document.                    | `true`  |
-| `Comment(rune)`                          | Sets the leading rune of comments used while scanning a document.                       |         |
+| Setting                                  | Description                                                                                                                                                                                                                                                            | Default |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `AllowSingleQuote(bool)`                 | Sets whether single quotes are allowed while scanning a document.                                                                                                                                                                                                      | `true`  |
+| `AllowEmptyField(bool)`                  | Sets whether empty fields are allowed while scanning a document.                                                                                                                                                                                                       | `true`  |
+| `AllowEndingLineBreakInLastRecord(bool)` | Sets whether the last record may have an ending line break while reading a document.                                                                                                                                                                                   | `true`  |
+| `OmitLeadingSpace(bool)`                 | Sets whether the leading spaces of fields should be omitted while scanning a document.                                                                                                                                                                                 | `true`  |
+| `OmitTrailingSpace(bool)`                | Sets whether the trailing spaces of fields should be omitted while scanning a document.                                                                                                                                                                                | `true`  |
+| `OmitEmptyLine(bool)`                    | Sets whether empty lines should be omitted while reading a document.                                                                                                                                                                                                   | `true`  |
+| `Comment(rune)`                          | Sets the leading rune of comments used while scanning a document.                                                                                                                                                                                                      |         |
+| `IgnoreBOM(bool)`                        | Sets whether the leading BOM (byte order mark) should be ignored while reading a document. If not, the BOM will be treated as normal content.<br>This should not be done by a csv package, but since Golang has no built-in support for BOM, a workaround is required. | `true`  |
 
 ### Unmarshaler and marshaler settings
 
